@@ -1,0 +1,20 @@
+[{"Item1":1,"Item2":2},{"Item1":3,"Item2":4},{"Item1":5,"Item2":6}]
+[{"Item1":1,"Item2":2},{"Item1":3,"Item2":4},{"Item1":5,"Item2":6}]
+
+chilling
+[{"Item1":358,"Item2":96},{"Item1":370,"Item2":85},{"Item1":343,"Item2":84},{"Item1":388,"Item2":95},{"Item1":320,"Item2":93},{"Item1":408,"Item2":176},{"Item1":281,"Item2":166},{"Item1":431,"Item2":277},{"Item1":254,"Item2":261},{"Item1":417,"Item2":356},{"Item1":255,"Item2":343},{"Item1":375,"Item2":363},{"Item1":292,"Item2":362},]
+
+left arm
+[{"Item1":355,"Item2":91},{"Item1":368,"Item2":79},{"Item1":338,"Item2":79},{"Item1":385,"Item2":88},{"Item1":314,"Item2":87},{"Item1":413,"Item2":171},{"Item1":277,"Item2":164},{"Item1":438,"Item2":257},{"Item1":252,"Item2":259},{"Item1":523,"Item2":266},{"Item1":252,"Item2":339},{"Item1":371,"Item2":364},{"Item1":286,"Item2":360},{"Item1":291,"Item2":475},]
+
+left/right arm forward
+[{"Item1":335,"Item2":88},{"Item1":348,"Item2":74},{"Item1":318,"Item2":74},{"Item1":367,"Item2":83},{"Item1":292,"Item2":84},{"Item1":407,"Item2":176},{"Item1":256,"Item2":163},{"Item1":440,"Item2":260},{"Item1":226,"Item2":253},{"Item1":510,"Item2":213},{"Item1":151,"Item2":234},{"Item1":359,"Item2":376},{"Item1":263,"Item2":375},]
+
+left/right arm back
+[{"Item1":350,"Item2":90},{"Item1":364,"Item2":78},{"Item1":334,"Item2":77},{"Item1":381,"Item2":88},{"Item1":306,"Item2":87},{"Item1":408,"Item2":175},{"Item1":266,"Item2":164},{"Item1":432,"Item2":260},{"Item1":224,"Item2":255},{"Item1":519,"Item2":275},{"Item1":293,"Item2":284},{"Item1":373,"Item2":365},{"Item1":285,"Item2":364},]
+
+lookLeft
+[{"Item1":390,"Item2":87},{"Item1":393,"Item2":75},{"Item1":370,"Item2":74},{"Item1":322,"Item2":80},{"Item1":421,"Item2":173},{"Item1":265,"Item2":168},{"Item1":454,"Item2":270},{"Item1":243,"Item2":273},{"Item1":543,"Item2":293},{"Item1":252,"Item2":370},{"Item1":383,"Item2":391},{"Item1":291,"Item2":387},]
+
+lookRight
+[{"Item1":322,"Item2":97},{"Item1":339,"Item2":84},{"Item1":315,"Item2":86},{"Item1":381,"Item2":88},{"Item1":439,"Item2":173},{"Item1":293,"Item2":171},{"Item1":472,"Item2":260},{"Item1":271,"Item2":273},{"Item1":560,"Item2":280},{"Item1":274,"Item2":363},{"Item1":395,"Item2":380},{"Item1":306,"Item2":376},]

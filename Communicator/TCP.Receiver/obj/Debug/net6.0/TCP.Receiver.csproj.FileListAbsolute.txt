@@ -1,0 +1,15 @@
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\bin\Debug\net6.0\TCP.Receiver.exe
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\bin\Debug\net6.0\TCP.Receiver.deps.json
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\bin\Debug\net6.0\TCP.Receiver.runtimeconfig.json
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\bin\Debug\net6.0\TCP.Receiver.dll
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\bin\Debug\net6.0\TCP.Receiver.pdb
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.csproj.AssemblyReference.cache
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.GeneratedMSBuildEditorConfig.editorconfig
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.AssemblyInfoInputs.cache
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.AssemblyInfo.cs
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.csproj.CoreCompileInputs.cache
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.dll
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\refint\TCP.Receiver.dll
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.pdb
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\TCP.Receiver.genruntimeconfig.cache
+D:\Career\PRJ\Saharsh\Communicator\Communicator\TCP.Receiver\obj\Debug\net6.0\ref\TCP.Receiver.dll

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "RDsbhuJCE9VtvrLg+O4rVqhVqIPjvS67w6dz+2f6wqmRkGLqS90TsgooJTS6zfjIO6sTih78ha9KDztWyDb3Fw==",
+  "success": true,
+  "projectFilePath": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\Listener\\Listener.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\sahar\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\3.1.30\\microsoft.netcore.app.host.win-x64.3.1.30.nupkg.sha512"
+  ],
+  "logs": []
+}
