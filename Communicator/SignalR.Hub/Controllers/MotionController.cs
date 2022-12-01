@@ -24,7 +24,14 @@ namespace SignalR.Hub.Controllers
         {
             var points = JsonConvert.DeserializeObject<List<(int, int)>>(payload);
             Move pose = Poser.GetPose(points);
-            return moveToCharMap[pose];
+
+            char moveCharacter = moveToCharMap[pose];
+            if (pose != Move.Not)
+            {
+                Kyoo.Messages.Enqueue(moveCharacter.ToString());
+            }
+
+            return moveCharacter;
         }
 
         void Sample()

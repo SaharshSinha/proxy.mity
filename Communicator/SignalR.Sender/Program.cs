@@ -7,7 +7,7 @@ namespace SignalR.Sender
     internal class Program
     {
         static readonly HttpClient client = new HttpClient();
-
+        static string _conveyerHostName = "***REMOVED***";
         public Program()
         {
                 
@@ -15,6 +15,7 @@ namespace SignalR.Sender
 
         static void Main(string[] args)
         {
+            _conveyerHostName = File.ReadAllText("conveyerHostName.txt");
             Console.WriteLine("Hello, World! Type away...");
             Task.WaitAll(
                 CollectMessage(),
@@ -80,7 +81,7 @@ namespace SignalR.Sender
             //response.EnsureSuccessStatusCode();
             //string responseBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             // Above three lines can be replaced with new helper method below
-            string responseBody = await client.GetStringAsync($"http://***REMOVED***/api/Conveyer/{message}");
+            string responseBody = await client.GetStringAsync($"{_conveyerHostName}/api/Conveyer/{message}");
             Console.WriteLine("sent [" + responseBody + "]");
         }
     }

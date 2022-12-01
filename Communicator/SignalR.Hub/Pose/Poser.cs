@@ -4,6 +4,7 @@
     {
         private const double ANGLE_BUFFER = 22.5;
         private const double DISTANCE_BUFFER_PERCENTAGE = 22.5;
+        private const double ARM_BEND_ANGLE = 130;
         static Dictionary<BodyPoint, int> _indx = 
             new Dictionary<BodyPoint, int>
             {
@@ -74,11 +75,11 @@
                 BodyPoint.Elbow_Right,
                 BodyPoint.Wrist_Right);
 
-            if (rightHandAngle > (90 - ANGLE_BUFFER) && rightHandAngle < (90 + ANGLE_BUFFER))
+            if (rightHandAngle > (ARM_BEND_ANGLE - ANGLE_BUFFER) && rightHandAngle < (ARM_BEND_ANGLE + ANGLE_BUFFER))
             {
                 return BodyAction.TurnedLeft;
             }
-            else if (rightHandAngle > (270 - ANGLE_BUFFER) && rightHandAngle < (270 + ANGLE_BUFFER))
+            else if (rightHandAngle > (360 - ARM_BEND_ANGLE - ANGLE_BUFFER) && rightHandAngle < (360 - ARM_BEND_ANGLE + ANGLE_BUFFER))
             {
                 return BodyAction.TurnedRight;
             }
@@ -96,7 +97,7 @@
                 BodyPoint.Elbow_Left,
                 BodyPoint.Wrist_Left);
 
-            if (leftHandAngle > (90 - ANGLE_BUFFER) && leftHandAngle < (90 + ANGLE_BUFFER))
+            if (leftHandAngle > (ARM_BEND_ANGLE - ANGLE_BUFFER) && leftHandAngle < (ARM_BEND_ANGLE + ANGLE_BUFFER))
             {
                 return BodyAction.TurnedLeft;
             }

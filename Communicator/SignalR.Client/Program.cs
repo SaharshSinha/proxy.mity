@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using System.Diagnostics;
 
 namespace SignalR.Receiver
 {
@@ -6,14 +7,26 @@ namespace SignalR.Receiver
     {
         static readonly HttpClient client = new HttpClient();
         static int counter = 0;
-        static HubConnection connection;
         static COMCommunicator comCommunicator = new COMCommunicator();
+        private static int _multiplier = 1;
+        static Stopwatch _responser = Stopwatch.StartNew();
+        static string _conveyerHostName = "***REMOVED***";
+        private const int MAX_POLL_INTERVAL_SECONDS = 10;
+        private const int MIN_POLL_INTERVAL_MILLISECONDS = 10;
+        private static int _currentPollIntervalMilliSeconds = MIN_POLL_INTERVAL_MILLISECONDS;
         static async Task Main(string[] args)
         {
-            comCommunicator.InitializeComponent();
+            _conveyerHostName = File.ReadAllText("conveyerHostName.txt");
+            if (args.Length == 1)
+            {
+                _multiplier = int.Parse(args[0]);
+            }
+            comCommunicator.InitializeComponent(_multiplier);
             Console.WriteLine("Hello, World!");
             //await ReceiveSignalR();
-            await PollReceiver();
+            Task.WaitAll(
+                PollReceiver(),
+                comCommunicator.SendAsync());
 
         }
 
@@ -21,26 +34,44 @@ namespace SignalR.Receiver
         {
             counter++;
             string responseBody = "";
+
+            _responser.Restart();
             responseBody = await GetResponse();
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write(_responser.ElapsedMilliseconds.ToString()+".");
+            Console.ResetColor();
             // Above three lines can be replaced with new helper method below
             // string responseBody = await client.GetStringAsync(uri);
-            if (!string.IsNullOrEmpty(responseBody))
+            if (!string.IsNullOrEmpty(responseBody.Replace("[", "").Replace("]", "")))
             {
                 Console.WriteLine();
-                Console.WriteLine("received [" + responseBody + "]");
+                Console.Write("received [" + responseBody + "]");
                 var directions = responseBody.Replace("\"", "").Replace("[", "").Replace("]", "").Replace(",", "");
-                comCommunicator.Send(directions);
+                var multipliedDirections =
+                    string.IsNullOrEmpty(directions) ?
+                    directions :
+                    new string(directions[0], _multiplier);
+                //Console.WriteLine($"; sending {multipliedDirections}");
+                comCommunicator.DirectionQueue.Enqueue(directions);
+                //comCommunicator.Send(multipliedDirections);
+                _currentPollIntervalMilliSeconds = MIN_POLL_INTERVAL_MILLISECONDS;
             }
-            else if (counter % 10 == 0)
-                Console.Write('.');
+            else
+            {
+                _currentPollIntervalMilliSeconds *= 2;
+                _currentPollIntervalMilliSeconds = Math.Min(MAX_POLL_INTERVAL_SECONDS * 1000, _currentPollIntervalMilliSeconds);
+                Console.WriteLine( nameof(_currentPollIntervalMilliSeconds) + " is " + _currentPollIntervalMilliSeconds.ToString());
+                if (counter % 10 == 0)
+                    Console.Write('.');
+            }
         }
 
-        private static async Task<string> GetResponse(int retriesLeft = 3)
+        private static async Task<string> GetResponse(int retriesLeft = 10)
         {
             string responseBody = "";
             try
             {
-                using (HttpResponseMessage response = await client.GetAsync($"http://***REMOVED***:81/api/puller"))
+                using (HttpResponseMessage response = await client.GetAsync($"{_conveyerHostName}/api/puller"))
                 {
                     response.EnsureSuccessStatusCode();
                     responseBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -50,10 +81,10 @@ namespace SignalR.Receiver
             }
             catch (Exception ex)
             {
-                Console.WriteLine(  "error " + ex.Message);
+                Console.WriteLine($"RetriesLeft: {retriesLeft}; error" + ex.Message);
                 if (retriesLeft > 0)
                 {
-                    Console.WriteLine( "Retrying" );
+                    Console.WriteLine( "Retrying in 2 secs" );
                     await Task.Delay(2000);
                     return await GetResponse(retriesLeft - 1);
                 }
@@ -65,9 +96,11 @@ namespace SignalR.Receiver
 
         private static async Task PollReceiver()
         {
-            await GetMessages();
-            Thread.Sleep(500);
-            await PollReceiver();
+            while (true)
+            {
+                await GetMessages();
+                await Task.Delay(_currentPollIntervalMilliSeconds);
+            }
         }
 
         //private static async Task ReceiveSignalR()

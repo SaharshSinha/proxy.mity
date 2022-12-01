@@ -27,6 +27,7 @@ namespace SignalR.Hub
                 app.UseSwaggerUI();
             }
 
+
             app.UseHttpsRedirection();
 
             app.UseAuthorization();

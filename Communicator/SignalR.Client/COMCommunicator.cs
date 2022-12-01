@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 
 namespace SignalR.Receiver
@@ -9,9 +11,14 @@ namespace SignalR.Receiver
         private System.ComponentModel.IContainer components = null;
         private System.IO.Ports.SerialPort serialPort1;
         private bool _inited;
-
-        public void InitializeComponent()
+        public ConcurrentQueue<string> DirectionQueue = new ConcurrentQueue<string>();
+        Stopwatch sw = new Stopwatch();
+        private int _multiplier = 1;
+        int messagCounter = 0;
+        Stopwatch mqTime = new Stopwatch();
+        public void InitializeComponent(int multiplier)
         {
+            _multiplier = multiplier;
             if (!_inited)
             {
                 try
@@ -32,6 +39,19 @@ namespace SignalR.Receiver
             }
         }
 
+        public async Task SendAsync()
+        {
+            await Task.Yield();
+
+            while (true)
+            {
+                if (DirectionQueue.TryDequeue(out string? direction))
+                {
+                    Console.WriteLine("dequeued " + direction + " remaining " + string.Join(",", DirectionQueue));
+                    Send(direction);
+                }
+            }
+        }
 
         public void Send(string keys)
         {
@@ -45,8 +65,28 @@ namespace SignalR.Receiver
         {
             try
             {
-                serialPort1.WriteLine(key.ToString());
-                System.Console.WriteLine("sent: " + key.ToString());
+
+                if (messagCounter % 10 == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Sent 10 messages in " + mqTime.ElapsedMilliseconds + " ms");
+                    mqTime.Restart();
+                    Console.ResetColor();
+                }
+                sw.Reset();
+                sw.Start();
+                string textToSend = key.ToString();
+                serialPort1.Write(textToSend);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("sent: " + key.ToString() + " in " + sw.Elapsed.TotalMilliseconds.ToString() + " ms;");
+                Console.ResetColor();
+                //for (int i = 0; i < _multiplier - 1; i++)
+                //{
+                //    Thread.Sleep(1);
+                //    serialPort1.Write(textToSend);
+                //}
+                messagCounter++;
+
             }
             catch (Exception ex)
             {
@@ -57,7 +97,9 @@ namespace SignalR.Receiver
         private void serialPort1_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             string s = serialPort1.ReadExisting();//reads the serialport buffer
-            System.Console.WriteLine("rcvd: " + s);
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine(" rcvd: " + s + " after " + sw.Elapsed.TotalMilliseconds.ToString() + " ms");
+            Console.ResetColor();
         }
 
     }
