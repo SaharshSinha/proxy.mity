@@ -4,6 +4,7 @@ import tensorflow_hub as hub
 import cv2
 import numpy as np
 import pose_queryer
+import time
 
 # Download the model from TF Hub.
 model = hub.load('https://tfhub.dev/google/movenet/singlepose/thunder/4')
@@ -83,6 +84,8 @@ while success:
 
     # Reads next frame
     success, img = cap.read()
+    
+    time.sleep(0.5)
 
 cap.release()
 
