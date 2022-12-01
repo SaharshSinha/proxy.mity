@@ -1,6 +1,7 @@
 from enum import Enum
 
-class BodyPoint(enum):
+
+class BodyPoint(Enum):
     nose = 0
     eye_left = 1
     eye_rite = 2
@@ -14,3 +15,4 @@ class BodyPoint(enum):
     wrist_rite = 10
     waist_left = 11
     waist_rite = 12
+
