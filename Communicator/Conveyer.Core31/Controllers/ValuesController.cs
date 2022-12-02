@@ -12,10 +12,8 @@ namespace SignalR.Hub.Controllers
     {
         // GET: api/<ValuesController>
         [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return Kyoo.Messages.ToList();
-        }
+        public string Get() =>
+            Kyoo.Latest;
 
         // GET api/<ValuesController>/5
         [HttpGet("{id}")]

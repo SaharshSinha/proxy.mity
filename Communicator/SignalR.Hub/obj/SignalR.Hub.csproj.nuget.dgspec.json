@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj": {}
+    "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj": {}
   },
   "projects": {
-    "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj": {
+    "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj",
+        "projectUniqueName": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj",
         "projectName": "SignalR.Hub",
-        "projectPath": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj",
+        "projectPath": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj",
         "packagesPath": "C:\\Users\\sahar\\.nuget\\packages\\",
-        "outputPath": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Hub\\obj\\",
+        "outputPath": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Hub\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

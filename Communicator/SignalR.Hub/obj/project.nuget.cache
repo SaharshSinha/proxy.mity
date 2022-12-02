@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "K5L9fpNcnT+NKIDw9AKNLBlQAHtr+Mk7X9tUO4ACYQ8Y1x0uwlkG8A7pDVDbJaM7wMfSumAov840PyOQvUksIQ==",
+  "dgSpecHash": "sZo2NoRTsUO2PU3K+Lva6Trul2PPTD/75UKUXfWRedMOQ0IqvnSVo/qxW+E7EbeXsDQs2Of66T3jX1gaEOPU9w==",
   "success": true,
-  "projectFilePath": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj",
+  "projectFilePath": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Hub\\SignalR.Hub.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\sahar\\.nuget\\packages\\microsoft.extensions.apidescription.server\\3.0.0\\microsoft.extensions.apidescription.server.3.0.0.nupkg.sha512",
     "C:\\Users\\sahar\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj": {}
+    "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj": {}
   },
   "projects": {
-    "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj": {
+    "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj",
+        "projectUniqueName": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj",
         "projectName": "SignalR.Receiver",
-        "projectPath": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj",
+        "projectPath": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Client\\SignalR.Receiver.csproj",
         "packagesPath": "C:\\Users\\sahar\\.nuget\\packages\\",
-        "outputPath": "D:\\Career\\PRJ\\Saharsh\\Communicator\\Communicator\\SignalR.Client\\obj\\",
+        "outputPath": "D:\\Career\\PRJ\\Saharsh\\proxy\\Communicator\\SignalR.Client\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

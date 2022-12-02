@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SignalR.Hub.Controllers
@@ -11,6 +12,7 @@ namespace SignalR.Hub.Controllers
         [HttpGet("{message}")]
         public async Task<string> Get(string message)
         {
+            Kyoo.Latest = message;
             Kyoo.Messages.Enqueue(message);
             //var hub = new SenderHub();
             //await hub.SendMessage("method", message);

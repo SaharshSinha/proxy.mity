@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -14,6 +15,11 @@ namespace Conveyer.Core31.Receiver
         private static int _multiplier = 1;
         static Stopwatch _responser = Stopwatch.StartNew();
         static string _conveyerHostName = "***REMOVED***";
+
+        private const int _ABORT_TIMEOUT_MILLISECONDS = 1000;
+        public const char ABORT_KEY = '5';
+        long _mostRecentMessageTime;
+
         static async Task Main(string[] args)
         {
             _conveyerHostName = File.ReadAllText("conveyerHostName.txt");
@@ -21,13 +27,19 @@ namespace Conveyer.Core31.Receiver
             {
                 _multiplier = int.Parse(args[0]);
             }
-            comCommunicator.InitializeComponent(_multiplier);
+            comCommunicator.InitializeComponent();
             Console.WriteLine("Hello, World!");
-            //await ReceiveSignalR();
-            Task.WaitAll(
-                PollReceiver(),
-                comCommunicator.SendAsync());
+            PollReceiver().GetAwaiter().GetResult();
 
+        }
+
+
+        private static async Task PollReceiver()
+        {
+            while (true)
+            {
+                await GetMessages();
+            }
         }
 
         private static async Task GetMessages()
@@ -35,31 +47,26 @@ namespace Conveyer.Core31.Receiver
             counter++;
             string responseBody = "";
 
-            _responser.Restart();
-            responseBody = await GetResponse();
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.Write("." + _responser.ElapsedMilliseconds.ToString());
-            Console.ResetColor();
-            // Above three lines can be replaced with new helper method below
-            // string responseBody = await client.GetStringAsync(uri);
+            //_responser.Restart();
+            responseBody = await GetHttpResponse(1);
+            //Console.ForegroundColor = ConsoleColor.Magenta;
+            //Console.Write("." + _responser.ElapsedMilliseconds.ToString());
+            //Console.ResetColor();
             if (!string.IsNullOrEmpty(responseBody.Replace("[", "").Replace("]", "")))
             {
                 Console.WriteLine();
                 Console.Write("received [" + responseBody + "]");
                 var directions = responseBody.Replace("\"", "").Replace("[", "").Replace("]", "").Replace(",", "");
-                var multipliedDirections =
-                    string.IsNullOrEmpty(directions) ?
-                    directions :
-                    new string(directions[0], _multiplier);
                 //Console.WriteLine($"; sending {multipliedDirections}");
-                comCommunicator.DirectionQueue.Enqueue(directions);
+                comCommunicator.Send(directions.Last());
                 //comCommunicator.Send(multipliedDirections);
             }
             else if (counter % 10 == 0)
                 Console.Write('.');
         }
 
-        private static async Task<string> GetResponse(int retriesLeft = 10)
+
+        private static async Task<string> GetHttpResponse(int retriesLeft = 10)
         {
             string responseBody = "";
             try
@@ -79,7 +86,7 @@ namespace Conveyer.Core31.Receiver
                 {
                     Console.WriteLine("Retrying in 2 secs");
                     await Task.Delay(2000);
-                    return await GetResponse(retriesLeft - 1);
+                    return await GetHttpResponse(retriesLeft - 1);
                 }
                 else
                     throw;
@@ -87,11 +94,5 @@ namespace Conveyer.Core31.Receiver
 
         }
 
-        private static async Task PollReceiver()
-        {
-            await GetMessages();
-            await Task.Delay(10);
-            await PollReceiver();
-        }
     }
 }

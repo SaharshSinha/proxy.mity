@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import pose_queryer
 import time
+import requests
 
 # Download the model from TF Hub.
 model = hub.load('https://tfhub.dev/google/movenet/singlepose/thunder/4')
@@ -13,7 +14,7 @@ movenet = model.signatures['serving_default']
 # Threshold for 
 threshold = .3
 # Loads video source (0 is for main webcam)
-video_source = 2
+video_source = 0
 cap = cv2.VideoCapture(video_source)
 
 # Checks errors while opening the Video Capture
@@ -74,7 +75,10 @@ while success:
     if found_points >= 13:
         pose_action = pose_queryer.get_action_for_pose(pose_points)
         moveChar = str(pose_action)
+        requests.get('http://***REMOVED***/api/Conveyer/' + moveChar)
         print(moveChar)
+    else:
+        requests.get('http://***REMOVED***/api/Conveyer/5')
 
     img = cv2.putText(img, str(moveChar), (256, 256), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 8, cv2.LINE_AA)
     cv2.imshow('Movenet', img)
@@ -85,7 +89,7 @@ while success:
     # Reads next frame
     success, img = cap.read()
     
-    time.sleep(0.5)
+    # time.sleep(0.5)
 
 cap.release()
 
