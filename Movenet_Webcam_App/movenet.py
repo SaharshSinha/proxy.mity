@@ -6,6 +6,7 @@ import numpy as np
 import pose_queryer
 import time
 import requests
+from body_points import BodyPoint, BodyPointColor, color_array
 
 # Download the model from TF Hub.
 model = hub.load('https://tfhub.dev/google/movenet/singlepose/thunder/4')
@@ -29,6 +30,7 @@ if not success:
     quit()
 
 y, x, _ = img.shape
+
 
 while success:
     pose_points = []
@@ -55,32 +57,32 @@ while success:
             # The first two channels of the last dimension represents the yx coordinates (normalized to image frame, i.e. range in [0.0, 1.0]) of the 17 keypoints
             yc = int(k[0] * y)
             xc = int(k[1] * x)
-
-            # if found_points == 5:
-            #     print (str(xc), '; ', str(yc), '; ', str(k[1]), '; ', str(k[0]))
             
             pose_points.append([xc, yc])
-            img = cv2.putText(
-                img, 
-                '(' + str(xc) + ',' + str(yc) + ')', 
-                (xc - 6, yc + 10), 
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.15, 
-                (255, 255, 0), 
-                1, 
-                cv2.LINE_AA)
+            img = pose_queryer.show_points(img, idx, xc, yc)
+            # img = cv2.putText(
+            #     img, 
+            #     '(' + str(xc) + ',' + str(yc) + ')', 
+            #     (xc - 6, yc + 10), 
+            #     cv2.FONT_HERSHEY_SIMPLEX,
+            #     0.15, 
+            #     point_color, 
+            #     1, 
+            #     cv2.LINE_AA)
 
     # request_parameter = request_parameter + ']'
     moveChar = 'X'
     if found_points >= 13:
         pose_action = pose_queryer.get_action_for_pose(pose_points)
         moveChar = str(pose_action)
+        # print(moveChar)
+        img = pose_queryer.draw_visual_cues_v1(pose_points, img, x, y)
         requests.get('http://***REMOVED***/api/Conveyer/' + moveChar)
-        print(moveChar)
     else:
         requests.get('http://***REMOVED***/api/Conveyer/5')
-
-    img = cv2.putText(img, str(moveChar), (256, 256), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 8, cv2.LINE_AA)
+    img = cv2.flip(img, 1)
+    img = cv2.putText(img, str(moveChar), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 0), 8, cv2.LINE_AA)
+    img = cv2.resize(img, (2*x, 2*y))
     cv2.imshow('Movenet', img)
     # Waits for the next frame, checks if q was pressed to quit
     if cv2.waitKey(1) == ord("q"):
@@ -92,4 +94,7 @@ while success:
     # time.sleep(0.5)
 
 cap.release()
+
+
+
 
