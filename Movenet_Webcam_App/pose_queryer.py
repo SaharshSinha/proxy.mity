@@ -1,4 +1,4 @@
-import math
+from math import sin, cos, radians, pi, atan2, degrees, dist
 from body_points import BodyPoint, BodyPointColor, color_array
 import cv2
 
@@ -12,25 +12,23 @@ ___LOOK_LEFT: int = 4
 ___LOOK_RITE: int = 6
 ___STOP: int = 5
 
-arrow_half = 30
-
 _X_ = 0
 _Y_ = 1
 
-elbow_angle_left_active = 270
-elbow_angle_left_signal = 270 + 45
+_ELBOW_ANGLE_LEFT_ACTIVE = 225
+_ELBOW_ANGLE_LEFT_SIGNAL = _ELBOW_ANGLE_LEFT_ACTIVE # + 45
 
-elbow_angle_rite_active = 90
-elbow_angle_rite_signal = 90 - 45
+_ELBOW_ANGLE_RITE_ACTIVE = 90
+_ELBOW_ANGLE_RITE_SIGNAL = 90 - 45
 
-active_elbow_angle_error = 15
+_ACTIVE_ELBOW_ANGLE_ERROR = 15
 
-body_tilt_threshold = 0.15
+_BODY_TILT_THRESHOLD = 0.15
 
-head_turn_threshold = 0.4
-head_turn_threshold_buffer = 0.1
-head_turn_threshold_percent = 40
-head_turn_indicator_length = 50
+_HEAD_TURN_THRESHOLD = 0.4
+_HEAD_TURN_THRESHOLD_BUFFER = 0.1
+_HEAD_TURN_THRESHOLD_PERCENT = 40
+_HEAD_TURN_INDICATOR_LENGTH = 50
 
 
 tracking_points = set([
@@ -44,6 +42,15 @@ tracking_points = set([
     BodyPoint.wrist_rite.value])
 
 print (tracking_points)
+
+
+def relative_point_pos(body_point, d, theta) -> list[int]:
+    theta_rad = pi/2 - radians(theta)
+    return [round(body_point[_X_] + d*cos(theta_rad)), round(body_point[_Y_] + d*sin(theta_rad))]
+
+def point_pos(x0, y0, d, theta):
+    theta_rad = pi/2 - radians(theta)
+    return x0 + d*cos(theta_rad), y0 + d*sin(theta_rad)
 
 def show_points(img, idx: int, xc: int, yc: int):
     point_color = (0, 0, 0)
@@ -89,27 +96,28 @@ def draw_visual_cues_v1(pose_points: list, img: any, width: int, height: int) ->
 
 
     shoulder_distance: float = get_distance_between_shoulders(pose_points)
-    shoulder_height = (shoulder_distance * body_tilt_threshold)
+    shoulder_height = (shoulder_distance * _BODY_TILT_THRESHOLD)
     shoulder_height_adjustment =  int((shoulder_height - abs(shoulder_left_point[_Y_] - shoulder_rite_point[_Y_]))/2)
 
 
+    percent_write_point_from = (midpoint_x, 20)
+    percent_write_point_full_left = (midpoint_x + _HEAD_TURN_INDICATOR_LENGTH, 30)
+    percent_write_point_full_rite = (midpoint_x - _HEAD_TURN_INDICATOR_LENGTH, 30)
+
     if ear_distance_left < ear_distance_rite:
-        actual_percent_length = int((100 / head_turn_threshold_percent) * (head_turn_indicator_length - int(ear_distance_left / ear_distance_rite * 100))) 
-        percent_write_point_from = (midpoint_x, 20)
-        percent_write_point_full = (midpoint_x + head_turn_indicator_length, 30)
+        actual_percent_length = int((100 / _HEAD_TURN_THRESHOLD_PERCENT) * (_HEAD_TURN_INDICATOR_LENGTH - int(ear_distance_left / ear_distance_rite * 100))) 
         percent_write_point_real = (midpoint_x + actual_percent_length, 30)
     elif ear_distance_left > ear_distance_rite:
-        actual_percent_length = int((100 / head_turn_threshold_percent) * (head_turn_indicator_length - int(ear_distance_rite / ear_distance_left * 100))) 
-        percent_write_point_from = (midpoint_x, 20)
-        percent_write_point_full = (midpoint_x - head_turn_indicator_length, 30)
+        actual_percent_length = int((100 / _HEAD_TURN_THRESHOLD_PERCENT) * (_HEAD_TURN_INDICATOR_LENGTH - int(ear_distance_rite / ear_distance_left * 100))) 
         percent_write_point_real = (midpoint_x - actual_percent_length, 30)
     else:
         percent_write_point_from = (0,0)
-        percent_write_point_full = (0,0)
         percent_write_point_real = (0,0)
 
     img = cv2.rectangle(img, percent_write_point_from, percent_write_point_real, BodyPointColor.nose.value, -1)
-    img = cv2.rectangle(img, percent_write_point_from, percent_write_point_full, BodyPointColor.nose.value, 1)
+
+    img = cv2.rectangle(img, percent_write_point_from, percent_write_point_full_left, (0,0,0), 1)
+    img = cv2.rectangle(img, percent_write_point_from, percent_write_point_full_rite, (0,0,0), 1)
     
     # img = cv2.putText(
     #     img, 
@@ -125,23 +133,90 @@ def draw_visual_cues_v1(pose_points: list, img: any, width: int, height: int) ->
     cue_body_left_x = nose_x - 10
     cue_body_rite_x = nose_x + 10
 
+    left_elbow_point = pose_points[BodyPoint.elbow_left.value]
+    rite_elbow_point = pose_points[BodyPoint.elbow_rite.value]
+
+    left_shoulder_point = pose_points[BodyPoint.shoulder_left.value]
+    rite_shoulder_point = pose_points[BodyPoint.shoulder_rite.value]
+
+    left_elbow_plane_point = (0, left_elbow_point[_Y_])
+    rite_elbow_plane_point = (0, rite_elbow_point[_Y_])
+    
+    left_upper_arm_angle = get_angle(left_elbow_plane_point, left_elbow_point, left_shoulder_point)
+    rite_upper_arm_angle = get_angle(rite_elbow_plane_point, rite_elbow_point, rite_shoulder_point)
+
+    left_elbow_angle = get_angle_elbow_left(pose_points)
+    rite_elbow_angle = get_angle_elbow_rite(pose_points)
+
+    left_elbow_absolute_angle = -1 * ((left_upper_arm_angle + _ELBOW_ANGLE_LEFT_ACTIVE) % 360)
+    rite_elbow_absolute_angle = -1 * ((rite_upper_arm_angle + _ELBOW_ANGLE_RITE_ACTIVE) % 360)
+    
+    left_arm_point_max = relative_point_pos(
+        left_elbow_point, 
+        3 * get_distance(
+            pose_points[BodyPoint.elbow_left.value], 
+            pose_points[BodyPoint.wrist_left.value]),
+        left_elbow_absolute_angle + _ACTIVE_ELBOW_ANGLE_ERROR)
+    
+    left_arm_angle_min = relative_point_pos(
+        left_elbow_point, 
+        3 * get_distance(
+            pose_points[BodyPoint.elbow_left.value], 
+            pose_points[BodyPoint.wrist_left.value]),
+        left_elbow_absolute_angle - _ACTIVE_ELBOW_ANGLE_ERROR)
+    
+    # print(left_elbow_point)
+    # print(left_arm_point_max)
+
     img = cv2.line(img, 
-        (cue_body_left_x, shoulder_left_point[_Y_]), 
-        (cue_body_left_x, waist_left_point[_Y_]), 
+        (left_elbow_point[_X_], left_elbow_point[_Y_]), 
+        (left_arm_point_max[_X_], left_arm_point_max[_Y_]), 
         BodyPointColor.ear_left.value,
         2 )
-        
+    
     img = cv2.line(img, 
-        (cue_body_rite_x, shoulder_rite_point[_Y_]), 
-        (cue_body_rite_x, waist_rite_point[_Y_]), 
-        BodyPointColor.ear_rite.value,
+        (left_elbow_point[_X_], left_elbow_point[_Y_]), 
+        (left_arm_angle_min[_X_], left_arm_angle_min[_Y_]), 
+        BodyPointColor.ear_left.value,
         2 )
 
+    img = cv2.putText(img, 
+        str(round(left_elbow_angle)) + '; ' + str(round(left_upper_arm_angle)) + '; ' + str(round(left_elbow_absolute_angle)), 
+        left_elbow_point, 
+        cv2.FONT_HERSHEY_SIMPLEX, 
+        1, 
+        (200, 200, 200), 
+        2, 
+        cv2.LINE_AA)
+    
+    img = cv2.putText(img, 
+        str(round(rite_elbow_angle)), 
+        rite_elbow_point, 
+        cv2.FONT_HERSHEY_SIMPLEX, 
+        1, 
+        (200, 200, 200), 
+        2, 
+        cv2.LINE_AA)
+
+    # img = cv2.line(img, 
+    #     (cue_body_left_x, shoulder_left_point[_Y_]), 
+    #     (cue_body_left_x, waist_left_point[_Y_]), 
+    #     BodyPointColor.ear_left.value,
+    #     2 )
+        
+    # img = cv2.line(img, 
+    #     (cue_body_rite_x, shoulder_rite_point[_Y_]), 
+    #     (cue_body_rite_x, waist_rite_point[_Y_]), 
+    #     BodyPointColor.ear_rite.value,
+    #     2 )
+
+    shoulder_distance_offset = round((shoulder_left_point[_X_] - shoulder_rite_point[_X_]) / 3)
+
     img = cv2.rectangle(img,
-        (shoulder_left_point[_X_], shoulder_left_point[_Y_]),
-        (shoulder_rite_point[_X_], shoulder_rite_point[_Y_]),
+        (shoulder_left_point[_X_] + shoulder_distance_offset, shoulder_left_point[_Y_]),
+        (shoulder_rite_point[_X_] - shoulder_distance_offset, shoulder_rite_point[_Y_]),
         BodyPointColor.nose.value,
-        1)
+        -1)
 
 
     img = cv2.rectangle(img,
@@ -152,6 +227,40 @@ def draw_visual_cues_v1(pose_points: list, img: any, width: int, height: int) ->
 
     # cue_body_left = [ [cue_body_left_x, shoulder_left_point[_Y_]], [cue_body_left_x, waist_left_point[_Y_]] ]
     # cue_body_rite = [ [cue_body_rite_x, shoulder_rite_point[_Y_]], [cue_body_rite_x, waist_rite_point[_Y_]] ]
+
+    return img
+
+def overlay(img, overlay_img, angle = 0, scale = 1):
+
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
+    overlay_img = cv2.cvtColor(overlay_img, cv2.COLOR_RGB2RGBA)
+    height, width = (img.shape[0] , img.shape[1])
+    size = (width, height)
+    center = (width/2,height/2)
+    
+    rotation_matrix = cv2.getRotationMatrix2D(
+        center, 
+        angle, 
+        scale)
+
+    overlay_img_dst = cv2.warpAffine(
+        overlay_img, 
+        rotation_matrix, 
+        size,
+        flags=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_TRANSPARENT)
+
+    x_offset = int((img.shape[1] - overlay_img_dst.shape[1])/2)
+    y_offset =  int((img.shape[0] - overlay_img_dst.shape[0])/2)
+
+    y1, y2 = y_offset, y_offset + overlay_img_dst.shape[0]
+    x1, x2 = x_offset, x_offset + overlay_img_dst.shape[1]
+
+    alpha_s = overlay_img_dst[:, :, 3] / 255.0
+    alpha_l = 1.0 - alpha_s
+
+    for c in range(0, 3):
+        img[y1:y2, x1:x2, c] = (alpha_s * overlay_img_dst[:, :, c] + alpha_l * img[y1:y2, x1:x2, c])
 
     return img
 
@@ -200,8 +309,8 @@ def head_is_turned_left(pose_points) -> bool:
     """
     left_ear_distance: float = get_distance_ear_left_from_nose(pose_points)
     rite_ear_distance: float = get_distance_ear_rite_from_nose(pose_points)
-    rite_ear_min_distance = rite_ear_distance * (head_turn_threshold - head_turn_threshold_buffer)
-    rite_ear_max_distance = rite_ear_distance * (head_turn_threshold + (head_turn_threshold_buffer * 3))
+    rite_ear_min_distance = rite_ear_distance * (_HEAD_TURN_THRESHOLD - _HEAD_TURN_THRESHOLD_BUFFER)
+    rite_ear_max_distance = rite_ear_distance * (_HEAD_TURN_THRESHOLD + (_HEAD_TURN_THRESHOLD_BUFFER * 3))
     # print ('    left_ear_distance: ', str(left_ear_distance))
     # print ('    rite_ear_distance: ', str(rite_ear_distance))
     # print ('    rite_ear_min_distance: ', str(rite_ear_min_distance))
@@ -217,8 +326,8 @@ def head_is_turned_rite(pose_points) -> bool:
     """
     left_ear_distance: float = get_distance_ear_left_from_nose(pose_points)
     rite_ear_distance: float = get_distance_ear_rite_from_nose(pose_points)
-    left_ear_min_distance = left_ear_distance * (head_turn_threshold - head_turn_threshold_buffer)
-    left_ear_max_distance = left_ear_distance * (head_turn_threshold + (head_turn_threshold_buffer*3))
+    left_ear_min_distance = left_ear_distance * (_HEAD_TURN_THRESHOLD - _HEAD_TURN_THRESHOLD_BUFFER)
+    left_ear_max_distance = left_ear_distance * (_HEAD_TURN_THRESHOLD + (_HEAD_TURN_THRESHOLD_BUFFER*3))
     # print ('    rite_ear_distance: ', str(rite_ear_distance))
     # print ('    left_ear_distance: ', str(left_ear_distance))
     # print ('    left_ear_min_distance: ', str(left_ear_min_distance))
@@ -237,7 +346,7 @@ def body_is_tilted_left(pose_points) -> bool:
     # print ('        shoulder_distance: ', str(shoulder_distance))
     # print ('        shoulder_height_difference: ', str(shoulder_height_difference))
     # print ('        -----')
-    return (shoulder_height_difference >= (shoulder_distance * body_tilt_threshold))
+    return (shoulder_height_difference >= (shoulder_distance * _BODY_TILT_THRESHOLD))
 
 
 def body_is_tilted_rite(pose_points) -> bool:
@@ -250,7 +359,7 @@ def body_is_tilted_rite(pose_points) -> bool:
     # print ('        shoulder_distance: ', str(shoulder_distance))
     # print ('        shoulder_height_difference: ', str(shoulder_height_difference))
     # print ('        -----')
-    return (shoulder_height_difference >= (shoulder_distance * body_tilt_threshold))
+    return (shoulder_height_difference >= (shoulder_distance * _BODY_TILT_THRESHOLD))
 
 
 def left_hand_is_active(pose_points) -> bool:
@@ -261,8 +370,8 @@ def left_hand_is_active(pose_points) -> bool:
     left_elbow_angle = get_angle_elbow_left(pose_points)
     # print ('left_elbow_angle: ', str(left_elbow_angle))
     return (
-            left_elbow_angle >= (elbow_angle_left_active - active_elbow_angle_error) and
-            left_elbow_angle <= (elbow_angle_left_active + active_elbow_angle_error))
+            left_elbow_angle >= (_ELBOW_ANGLE_LEFT_ACTIVE - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            left_elbow_angle <= (_ELBOW_ANGLE_LEFT_ACTIVE + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 
@@ -274,8 +383,8 @@ def left_hand_is_signalling(pose_points) -> bool:
     left_elbow_angle = get_angle_elbow_left(pose_points)
     # print ('left_elbow_angle: ', str(left_elbow_angle))
     return (
-            left_elbow_angle >= (elbow_angle_left_signal - active_elbow_angle_error) and
-            left_elbow_angle <= (elbow_angle_left_signal + active_elbow_angle_error))
+            left_elbow_angle >= (_ELBOW_ANGLE_LEFT_SIGNAL - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            left_elbow_angle <= (_ELBOW_ANGLE_LEFT_SIGNAL + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 
@@ -287,8 +396,8 @@ def rite_hand_is_active(pose_points) -> bool:
     rite_elbow_angle = get_angle_elbow_rite(pose_points)
     # print ('rite_elbow_angle: ', str(rite_elbow_angle))
     return (
-            rite_elbow_angle >= (elbow_angle_rite_active - active_elbow_angle_error) and
-            rite_elbow_angle <= (elbow_angle_rite_active + active_elbow_angle_error))
+            rite_elbow_angle >= (_ELBOW_ANGLE_RITE_ACTIVE - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            rite_elbow_angle <= (_ELBOW_ANGLE_RITE_ACTIVE + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 def rite_hand_is_signalling(pose_points) -> bool:
@@ -300,8 +409,8 @@ def rite_hand_is_signalling(pose_points) -> bool:
     # print ('    rite_elbow_angle: ', str(rite_elbow_angle))
     # print ('    -----')
     return (
-            rite_elbow_angle >= (elbow_angle_rite_signal - active_elbow_angle_error) and
-            rite_elbow_angle <= (elbow_angle_rite_signal + active_elbow_angle_error))
+            rite_elbow_angle >= (_ELBOW_ANGLE_RITE_SIGNAL - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            rite_elbow_angle <= (_ELBOW_ANGLE_RITE_SIGNAL + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 # def rite_hand_is_active_bakward(pose_points) -> bool:
@@ -311,8 +420,8 @@ def rite_hand_is_signalling(pose_points) -> bool:
 #     """
 #     rite_elbow_angle = get_angle_elbow_rite(pose_points)
 #     return (
-#             rite_elbow_angle >= (elbow_angle_rite_signal - active_elbow_angle_error) and
-#             rite_elbow_angle <= (elbow_angle_rite_signal + active_elbow_angle_error))
+#             rite_elbow_angle >= (_ELBOW_ANGLE_RITE_SIGNAL - _ACTIVE_ELBOW_ANGLE_ERROR) and
+#             rite_elbow_angle <= (_ELBOW_ANGLE_RITE_SIGNAL + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 def get_distance_ear_left_from_nose(pose_points) -> float:
@@ -455,7 +564,7 @@ def get_distance(a, b) -> float:
 
     :rtype: float
     """
-    return math.dist(a, b)
+    return dist(a, b)
 
 
 def get_angle(a, b, c) -> float:
@@ -463,5 +572,5 @@ def get_angle(a, b, c) -> float:
 
     :rtype: float
     """
-    ang = math.degrees(math.atan2(c[_Y_]-b[_Y_], c[_X_]-b[_X_]) - math.atan2(a[_Y_]-b[_Y_], a[_X_]-b[_X_]))
+    ang = degrees(atan2(c[_Y_]-b[_Y_], c[_X_]-b[_X_]) - atan2(a[_Y_]-b[_Y_], a[_X_]-b[_X_]))
     return ang + 360 if ang < 0 else ang
