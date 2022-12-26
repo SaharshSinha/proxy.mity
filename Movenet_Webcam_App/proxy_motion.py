@@ -4,15 +4,24 @@ import tensorflow_hub as hub
 import cv2
 import numpy as np
 import pose_queryer
-import time
+import visual_helper
+import os
 import requests
 import matplotlib.pyplot as plt
 from PIL import Image
+import time
 
+
+
+# Download the model from TF Hub.
+# model = hub.load('https://tfhub.dev/google/movenet/singlepose/thunder/4')
+model = hub.load('D:\Downloads\movenet')
+movenet = model.signatures['serving_default']
 relay_host = '***REMOVED***'
-# Threshold for 
+
+os.system('cls')
+ 
 threshold = .3
-# Loads video source (0 is for main webcam)
 video_source = 2
 cap = cv2.VideoCapture(video_source)
 overlayed = cv2.cvtColor(cv2.imread('images/arrow.png'), cv2.COLOR_RGB2RGBA)
@@ -33,16 +42,18 @@ print('got first image: ', img.shape)
 print('overlayed:       ', overlayed.shape)
 
 cv2.imshow('proxyMotion', img)
-
-
-# Download the model from TF Hub.
-# model = hub.load('https://tfhub.dev/google/movenet/singlepose/thunder/4')
-model = hub.load('D:\Downloads\movenet')
-movenet = model.signatures['serving_default']
-
+frame_idx = 0
 alpha = 0.7
 beta = (1.0 - alpha)
+prev_frame_time = 0
+new_frame_time = 0
+
 while success:
+    new_frame_time = time.time()
+    fps = str(int(1/(new_frame_time-prev_frame_time)))
+    prev_frame_time = new_frame_time
+    pose_queryer.measure.fps = fps
+    frame_idx += 1
     pose_points = []
     img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
     # A frame of video or an image, represented as an int32 tensor of shape: 256x256x3. Channels order: RGB with values in [0, 255].
@@ -59,7 +70,7 @@ while success:
     keypoints = outputs['output_0']
     found_points = 0
     # iterate through keypoints
-    for idx, k in enumerate(keypoints[0, 0, :, :]):
+    for point_idx, k in enumerate(keypoints[0, 0, :, :]):
         # Converts to numpy array
         k = k.numpy()
         # Checks confidence for keypoint
@@ -70,24 +81,15 @@ while success:
             xc = int(k[1] * x)
             
             pose_points.append([xc, yc])
-            img = pose_queryer.show_points(img, idx, xc, yc)
-            # img = cv2.putText(
-            #     img, 
-            #     '(' + str(xc) + ',' + str(yc) + ')', 
-            #     (xc - 6, yc + 10), 
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     0.15, 
-            #     point_color, 
-            #     1, 
-            #     cv2.LINE_AA)
-
+            # img = pose_queryer.show_points_v2(img, frame_idx, point_idx, xc, yc)
+            
     # request_parameter = request_parameter + ']'
     move_char = 'X'
     if found_points >= 13:
-        pose_action = pose_queryer.get_action_for_pose(pose_points)
+        pose_action = pose_queryer.get_action_for_pose_v2(pose_points)
         move_char = str(pose_action)
         # print(move_char)
-        img = pose_queryer.draw_visual_cues_v1(pose_points, img, x, y)
+        img = visual_helper.draw_visual_cues_v2(pose_points, img, x, y, pose_action)
     else:
         move_char = '5'
     # if move_char != prev_move_char:
@@ -95,33 +97,17 @@ while success:
         # if (http_resp.ok):
         #     prev_move_char = move_char
     
-    
     img = cv2.putText(img, str(move_char), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 0), 8, cv2.LINE_AA)
     img = cv2.resize(img, (2*x, 2*y))
-    # img = pose_queryer.overlay(img, overlayed)
     
-    dst = cv2.addWeighted( img, alpha, overlayed, beta, 0.0)
-    # img = Image.fromarray(img) # Image.open(r"BACKGROUND_IMAGE_PATH")
-    # fore_image = Image.fromarray(overlayed)
-    # img.paste(fore_image, (0,0), mask = overlayed)
-    # img = np.asarray(img)
+    cv2.imshow('proxyMotion', img)
     
-    cv2.imshow('proxyMotion', dst)
-    # cv2.imshow('overlayed', overlayed)
-    # Waits for the next frame, checks if q was pressed to quit
     if cv2.waitKey(1) == ord("q"):
         break
 
     # Reads next frame
     success, img = cap.read()
     img = cv2.flip(img, 1)
-    
-    # plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA))
-    # plt.show()
-    # img_window.set_data(img)
-    # plt.draw()
-    # plt.show()
-    # time.sleep(0.5)
 
 cap.release()
 cv2.destroyAllWindows()

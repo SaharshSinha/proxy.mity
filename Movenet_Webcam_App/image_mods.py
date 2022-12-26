@@ -1,4 +1,54 @@
 import cv2
+import time
+
+def place_image(background, overlay, center_position, angle = 0, size = 0, opacity = 1):
+    x_offset = center_position[0] - int(overlay.shape[1] / 2)
+    y_offset = center_position[1] - int(overlay.shape[0] / 2)
+
+    x_min = x_offset 
+    x_max = x_offset + overlay.shape[1]
+    y_min = y_offset
+    y_max = y_offset + overlay.shape[0]
+
+    if x_max < 0 or y_max < 0 or x_min > background.shape[1] or y_min > background.shape[0]:
+        return 
+    
+    x_background_min = max(0, x_min) 
+    x_background_max = min(background.shape[1], x_max)
+    y_background_min = max(0, y_min)
+    y_background_max = min(background.shape[0], y_max)
+    
+    x_min_delta = abs(x_background_min - x_min)
+    y_min_delta = abs(y_background_min - y_min)
+    x_max_delta = abs(x_background_max - x_max)
+    y_max_delta = abs(y_background_max - y_max)
+
+    x_overlay_min = x_min_delta 
+    x_overlay_max = overlay.shape[1] - x_max_delta
+    y_overlay_min = y_min_delta 
+    y_overlay_max = overlay.shape[0] - y_max_delta
+    
+    rotate_matrix    = cv2.getRotationMatrix2D(center=center, angle=rotat_angle, scale=1)
+    overlay_rotated  = cv2.warpAffine(src=overlay, M=rotate_matrix, dsize=(width, height))
+    alpha_s = overlay_rotated[y_overlay_min:y_overlay_max, x_overlay_min:x_overlay_max, 3] / 255.0 * opacity
+    alpha_l = 1.0 - alpha_s
+
+    # print()
+    # print()
+    for c in range(0, 3):
+        # print('x_min: ', x_min, '; x_max: ', x_max, '; y_min: ', y_min, '; y_max: ', y_max)
+        # print('x_background_min: ', x_background_min, '; x_background_max: ', x_background_max, '; y_background_min: ', y_background_min, '; y_background_max: ', y_background_max)
+        # print('x_min_delta: ', x_min_delta, '; x_max_delta: ', x_max_delta, '; y_min_delta: ', y_min_delta, '; y_max_delta: ', y_max_delta)
+        # print('x_overlay_min: ', x_overlay_min, '; x_overlay_max: ', x_overlay_max, '; y_overlay_min: ', y_overlay_min, '; y_overlay_max: ', y_overlay_max)
+        # print((alpha_s * overlay_rotated[y_overlay_min:y_overlay_max, x_overlay_min:x_overlay_max, c]).shape)
+        # print((alpha_l * background[y_background_min:y_background_max, x_background_min:x_background_max, c]).shape)
+        # print()
+        # background[y_min:y_max, x_min:x_max, c] = (alpha_s * overlay_rotated[:, :, c] + alpha_l * background[y_min:y_max, x_min:x_max, c])
+        background[y_background_min:y_background_max, x_background_min:x_background_max, c] = (
+            alpha_s * overlay_rotated[y_overlay_min:y_overlay_max, x_overlay_min:x_overlay_max, c] + 
+            alpha_l * background[y_background_min:y_background_max, x_background_min:x_background_max, c])
+
+    
 
 video_source = 2
 cap = cv2.VideoCapture(video_source)
@@ -41,41 +91,34 @@ print('overlayed:       ', overlayed.shape)
 alpha = 0.7
 beta = (1.0 - alpha)
 
-x_offset = int((img.shape[1] - overlayed1.shape[1])/2)
-y_offset = int((img.shape[0] - overlayed1.shape[0])/2)
+center_x = img.shape[1]
+center_y = img.shape[0]
 
-y1, y2 = y_offset, y_offset + overlayed1.shape[0]
-x1, x2 = x_offset, x_offset + overlayed1.shape[1]
-
-ofset = -30
-
+ofset = 0
+counter = 1
 while success:
-    ofset += 1
+    ofset -= 1
     img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
     img = cv2.resize(img, (2*x, 2*y))
-        
-    rotate_matrix       = cv2.getRotationMatrix2D(center=center, angle=rotat_angle, scale=1)
-    overlayed1_rotated  = cv2.warpAffine(src=overlayed1, M=rotate_matrix, dsize=(width, height))
-
-    alpha_s = overlayed1_rotated[:, :, 3] / 255.0
-    alpha_l = 1.0 - alpha_s
-
-    for c in range(0, 3):
-        img[y1+ofset:y2+ofset, x1+ofset:x2+ofset, c] = (alpha_s * overlayed1_rotated[:, :, c] + alpha_l * img[y1+ofset:y2+ofset, x1+ofset:x2+ofset, c])
-        # print ('---')
-        # print (img[y1:y2, x1:x2, c])
     
-    # cv2.imshow('img[y1:y2, x1:x2, c]', img[y1:y2, x1:x2, c])
-    # dst = cv2.addWeighted(img, alpha, overlayed, beta, 0.0)
+    place_image(
+        img,
+        overlayed1,
+        (center_x + ofset, center_y + ofset),
+        rotat_angle,
+        1,
+        (counter%10)/10)
+
     cv2.imshow('proxyMotion', img)
-    # cv2.imshow('overlayed1', overlayed1)
     rotat_angle = rotat_angle + .2
     if cv2.waitKey(1) == ord("q"):
         break
 
     success, img = cap.read()
     img = cv2.flip(img, 1)
-
+    counter+=1
+    # time.sleep(0.2)
+    
 
 cap.release()
 cv2.destroyAllWindows()
