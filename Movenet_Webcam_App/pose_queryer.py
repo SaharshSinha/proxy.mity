@@ -16,11 +16,15 @@ ___ARMED: int = 0
 _X_ = 0
 _Y_ = 1
 
-_ELBOW_ANGLE_LEFT_ACTIVE = 315
+_ELBOW_ANGLE_LEFT_ACTIVE = 315 - 20
+_ELBOW_ANGLE_LEFT_SIGNAL = _ELBOW_ANGLE_LEFT_ACTIVE - 90
+
 # _ELBOW_ANGLE_LEFT_SIGNAL = _ELBOW_ANGLE_LEFT_ACTIVE # + 45
 
-_ELBOW_ANGLE_RITE_ACTIVE_FORE = 225
-_ELBOW_ANGLE_RITE_ACTIVE_BACK = 315
+_ELBOW_ANGLE_RITE_ACTIVE_FORE = 225 + 20
+_ELBOW_ANGLE_RITE_SIGNAL_FORE = _ELBOW_ANGLE_RITE_ACTIVE_FORE - 90
+_ELBOW_ANGLE_RITE_ACTIVE_BACK = 315+22.5
+_ELBOW_ANGLE_RITE_SIGNAL_BACK = _ELBOW_ANGLE_RITE_ACTIVE_BACK - 90
 # _ELBOW_ANGLE_RITE_SIGNAL = 90 - 45
 
 _ACTIVE_ELBOW_ANGLE_ERROR = 15
@@ -45,6 +49,11 @@ class measures:
     _left_ear_distance_from_nose = 0
     _rite_ear_distance_from_nose = 0
     fps = ''
+    left_hand_active = False
+    rite_hand_active_fore = False
+    rite_hand_active_back = False
+    head_turned_left = False
+    head_turned_rite = False
 
 measure = measures()
 
@@ -60,31 +69,38 @@ def point_pos(x0, y0, d, theta):
 def get_action_for_pose_v2(pose_points) -> int:
     set_angles_and_distances(pose_points)
     
-    left_hand_active = left_hand_is_active(pose_points)
-    rite_hand_active_fore = rite_hand_is_active_fore(pose_points)
-    rite_hand_active_back = rite_hand_is_active_back(pose_points)
-    head_turned_left = head_is_turned_left(pose_points)
-    head_turned_rite = head_is_turned_rite(pose_points)
+    measure.left_hand_active = left_hand_is_active(pose_points)
+    measure.rite_hand_active_fore = rite_hand_is_active_fore(pose_points)
+    measure.rite_hand_active_back = rite_hand_is_active_back(pose_points)
+    measure.head_turned_left = head_is_turned_left(pose_points)
+    measure.head_turned_rite = head_is_turned_rite(pose_points)
+
+    # print('left_hand_active: ' + str(left_hand_active))
+    # print('rite_hand_active_fore: ' + str(rite_hand_active_fore))
+    # print('rite_hand_active_back: ' + str(rite_hand_active_back))
+    # print('head_turned_left: ' + str(head_turned_left))
+    # print('head_turned_rite: ' + str(head_turned_rite))
+
 
     signal = 5
     
-    if   left_hand_active and rite_hand_active_fore and head_turned_left:
+    if   measure.left_hand_active and measure.rite_hand_active_fore and measure.head_turned_left:
         signal = ___MOVE_FORWARD_LEFT
-    elif left_hand_active and rite_hand_active_fore and head_turned_rite:
+    elif measure.left_hand_active and measure.rite_hand_active_fore and measure.head_turned_rite:
         signal = ___MOVE_FORWARD_RITE
-    elif left_hand_active and rite_hand_active_fore:
+    elif measure.left_hand_active and measure.rite_hand_active_fore:
         signal = ___MOVE_FORWARD
 
-    elif left_hand_active and rite_hand_active_back and head_turned_left:
+    elif measure.left_hand_active and measure.rite_hand_active_back and measure.head_turned_left:
         signal = ___MOVE_BAKWARD_LEFT
-    elif left_hand_active and rite_hand_active_back and head_turned_rite:
+    elif measure.left_hand_active and measure.rite_hand_active_back and measure.head_turned_rite:
         signal = ___MOVE_BAKWARD_RITE
-    elif left_hand_active and rite_hand_active_back:
+    elif measure.left_hand_active and measure.rite_hand_active_back:
         signal = ___MOVE_BAKWARD
         
-    elif left_hand_active and head_turned_left:
+    elif measure.left_hand_active and measure.head_turned_left:
         signal = ___LOOK_LEFT
-    elif left_hand_active and head_turned_rite:
+    elif measure.left_hand_active and measure.head_turned_rite:
         signal = ___LOOK_RITE
         
     return signal
@@ -121,8 +137,8 @@ def left_hand_is_active(pose_points) -> bool:
     left_elbow_angle = get_angle_elbow_left(pose_points)
     # print ('left_elbow_angle: ', str(left_elbow_angle))
     return (
-            left_elbow_angle >= (_ELBOW_ANGLE_LEFT_ACTIVE - _ACTIVE_ELBOW_ANGLE_ERROR) and
-            left_elbow_angle <= (_ELBOW_ANGLE_LEFT_ACTIVE + _ACTIVE_ELBOW_ANGLE_ERROR))
+            left_elbow_angle >= (_ELBOW_ANGLE_LEFT_SIGNAL - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            left_elbow_angle <= (_ELBOW_ANGLE_LEFT_SIGNAL + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 def rite_hand_is_active_fore(pose_points) -> bool:
@@ -132,8 +148,8 @@ def rite_hand_is_active_fore(pose_points) -> bool:
     """
     rite_elbow_angle = get_angle_elbow_rite(pose_points)
     return (
-            rite_elbow_angle >= (_ELBOW_ANGLE_RITE_ACTIVE_FORE - _ACTIVE_ELBOW_ANGLE_ERROR) and
-            rite_elbow_angle <= (_ELBOW_ANGLE_RITE_ACTIVE_FORE + _ACTIVE_ELBOW_ANGLE_ERROR))
+            rite_elbow_angle >= (_ELBOW_ANGLE_RITE_SIGNAL_FORE - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            rite_elbow_angle <= (_ELBOW_ANGLE_RITE_SIGNAL_FORE + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 def rite_hand_is_active_back(pose_points) -> bool:
@@ -143,8 +159,8 @@ def rite_hand_is_active_back(pose_points) -> bool:
     """
     rite_elbow_angle = get_angle_elbow_rite(pose_points)
     return (
-            rite_elbow_angle >= (_ELBOW_ANGLE_RITE_ACTIVE_BACK - _ACTIVE_ELBOW_ANGLE_ERROR) and
-            rite_elbow_angle <= (_ELBOW_ANGLE_RITE_ACTIVE_BACK + _ACTIVE_ELBOW_ANGLE_ERROR))
+            rite_elbow_angle >= (_ELBOW_ANGLE_RITE_SIGNAL_BACK - _ACTIVE_ELBOW_ANGLE_ERROR) and
+            rite_elbow_angle <= (_ELBOW_ANGLE_RITE_SIGNAL_BACK + _ACTIVE_ELBOW_ANGLE_ERROR))
 
 
 def get_distance_ear_left_from_nose(pose_points) -> float:
@@ -179,8 +195,8 @@ def get_angle_elbow_left(pose_points) -> float:
     :rtype: float
     """
     measure._left_fore_arm_angle_rel_to_upper_arm = (
-        360 - 
-        measure._left_fore_arm_angle +
+        # 360 - 
+        measure._left_fore_arm_angle -
         measure._left_uppr_arm_angle
     )
     return measure._left_fore_arm_angle_rel_to_upper_arm

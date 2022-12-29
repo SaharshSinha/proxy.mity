@@ -7,24 +7,65 @@ import pose_queryer
 _X_ = 0
 _Y_ = 1
 
-_FOREARM_OVERLAY_WHITE = cv2.imread('images/triangle.png', -1)
-_POINT_OVERLAY_WHITE_LEFT = cv2.imread('images/point.png', -1)
+
+_FOREARM_OVERLAY_WHITE_ACTIVATE = cv2.imread('images/activate.40.png', -1)
+_FOREARM_OVERLAY_WHITE_ACTIVATE_READY = cv2.imread('images/activate-ready.40.png', -1)
+_FOREARM_OVERLAY_WHITE_ACTIVATE_ACTIVE = cv2.imread('images/activate-active.40.png', -1)
+
+_FOREARM_OVERLAY_WHITE_ACCELERATE = cv2.imread('images/accelerate.40.png', -1)
+_FOREARM_OVERLAY_WHITE_ACCELERATE_READY = cv2.imread('images/accelerate-ready.40.png', -1)
+_FOREARM_OVERLAY_WHITE_ACCELERATE_ACTIVE = cv2.imread('images/accelerate-active.40.png', -1)
+
+_FOREARM_OVERLAY_WHITE_REVERSE = cv2.imread('images/reverse.40.png', -1)
+_FOREARM_OVERLAY_WHITE_REVERSE_READY = cv2.imread('images/reverse-ready.40.png', -1)
+_FOREARM_OVERLAY_WHITE_REVERSE_ACTIVE = cv2.imread('images/reverse-active.40.png', -1)
 
 _ROTATOR = cv2.imread('images/rotator-radial.10.png', -1)
+_ROTATOR_READY = cv2.imread('images/rotator-radial-ready.10.png', -1)
 _ROTATOR_ACTIVE = cv2.imread('images/rotator-radial-active.10.png', -1)
 
-_FORWARD = cv2.imread('images/forward.56.png', -1)
-_FORWARD_LEFT = cv2.imread('images/forward-left.56.png', -1)
-_FORWARD_RITE = cv2.imread('images/forward-rite.56.png', -1)
 
-_BACKWARD = cv2.imread('images/backward.56.png', -1)
-_BACKWARD_LEFT = cv2.imread('images/backward-left.56.png', -1)
-_BACKWARD_RITE = cv2.imread('images/backward-rite.56.png', -1)
+_activate_overlay_map = {
+    False: _FOREARM_OVERLAY_WHITE_ACTIVATE,
+    True: _FOREARM_OVERLAY_WHITE_ACTIVATE_ACTIVE,
+}
 
-_TURN_LEFT = cv2.imread('images/turn-left.56.png', -1)
-_TURN_RITE = cv2.imread('images/turn-rite.56.png', -1)
+_accelerate_overlay_map = {
+    '00': _FOREARM_OVERLAY_WHITE_ACCELERATE,
+    '01': _FOREARM_OVERLAY_WHITE_ACCELERATE_READY,
+    '10': _FOREARM_OVERLAY_WHITE_ACCELERATE,
+    '11': _FOREARM_OVERLAY_WHITE_ACCELERATE_ACTIVE,
+}
 
-_NO_GO = cv2.imread('images/no-go.56.png', -1)
+_reverse_overlay_map = {
+    '00': _FOREARM_OVERLAY_WHITE_REVERSE,
+    '01': _FOREARM_OVERLAY_WHITE_REVERSE_READY,
+    '10': _FOREARM_OVERLAY_WHITE_REVERSE,
+    '11': _FOREARM_OVERLAY_WHITE_REVERSE_ACTIVE,
+}
+
+_rotator_overlay_map = {
+    '00': _ROTATOR,
+    '01': _ROTATOR_READY,
+    '10': _ROTATOR,
+    '11': _ROTATOR_ACTIVE,
+}
+
+
+_POINT_OVERLAY_WHITE_LEFT = cv2.imread('images/point.png', -1)
+
+_FORWARD = cv2.imread('images/forward.72.png', -1)
+_FORWARD_LEFT = cv2.imread('images/forward-left.72.png', -1)
+_FORWARD_RITE = cv2.imread('images/forward-rite.72.png', -1)
+
+_BACKWARD = cv2.imread('images/backward.72.png', -1)
+_BACKWARD_LEFT = cv2.imread('images/backward-left.72.png', -1)
+_BACKWARD_RITE = cv2.imread('images/backward-rite.72.png', -1)
+
+_TURN_LEFT = cv2.imread('images/turn-left.72.png', -1)
+_TURN_RITE = cv2.imread('images/turn-rite.72.png', -1)
+
+_NO_GO = cv2.imread('images/no-go.72.png', -1)
 
 _INFONT_SIZE = 1
 _INFONT_COLOR = 1
@@ -75,6 +116,7 @@ tracking_points = set([
 
 
 def show_points(img, idx: int, xc: int, yc: int):
+    return img
     point_color = (0, 0, 0)
     radius = 2
     thickness = 1
@@ -100,12 +142,12 @@ def show_points_v2(img, frame_idx: int, point_idx: int, xc: int, yc: int):
         return place_image(img, _POINT_OVERLAY_WHITE_LEFT, (xc, yc), 0, 1, 1)
     return img
 
-def place_image(background, overlay, center_position, angle = 0, size = 1, opacity = 1):
-    
+def place_image(background, overlay, center_position, angle = 0, size = 1, transparency = 1.0):
+    # print (transparency)
     # crpo using
     # https://stackoverflow.com/questions/46273309/using-opencv-how-to-remove-non-object-in-transparent-image
     
-    if opacity == 0 or size == 0:
+    if transparency == 0 or size == 0:
         return 
         
     x_offset = center_position[0] - int(overlay.shape[1] / 2)
@@ -141,7 +183,7 @@ def place_image(background, overlay, center_position, angle = 0, size = 1, opaci
         rotate_matrix = cv2.getRotationMatrix2D(center=center, angle=angle, scale=1)
         overlay  = cv2.warpAffine(src=overlay, M=rotate_matrix, dsize=(width, height))
 
-    alpha_s = overlay[y_overlay_min:y_overlay_max, x_overlay_min:x_overlay_max, 3] / 255.0 * opacity
+    alpha_s = overlay[y_overlay_min:y_overlay_max, x_overlay_min:x_overlay_max, 3] / (1.0 * (255.0 * transparency)) # * transparency
     alpha_l = 1.0 - alpha_s
 
     for c in range(0, 3):
@@ -151,8 +193,44 @@ def place_image(background, overlay, center_position, angle = 0, size = 1, opaci
 
     return background
 
+def get_left_overlay_transparency():
+    if pose_queryer.measure.left_hand_active:
+        left_overlay_opacity = 1.2
+    else:
+        left_elbow_threshold_minimum = pose_queryer._ELBOW_ANGLE_LEFT_SIGNAL - pose_queryer._ACTIVE_ELBOW_ANGLE_ERROR 
+        left_forearm_angle = round(pose_queryer.measure._left_fore_arm_angle_rel_to_upper_arm)
+        if left_forearm_angle > left_elbow_threshold_minimum - 60:
+            left_overlay_opacity = max((left_elbow_threshold_minimum - left_forearm_angle)/5.0, 1.0)
+        else:
+            left_overlay_opacity = 10000
+    return left_overlay_opacity
+
+def get_rite_overlay_transparency_fore():
+    if pose_queryer.measure.rite_hand_active_fore:
+        rite_overlay_opacity_fore = 1.2
+    else:
+        rite_elbow_threshold_minimum_fore = pose_queryer._ELBOW_ANGLE_RITE_SIGNAL_FORE + pose_queryer._ACTIVE_ELBOW_ANGLE_ERROR 
+        rite_forearm_angle_fore = round(pose_queryer.measure._rite_fore_arm_angle_rel_to_upper_arm)
+        if rite_forearm_angle_fore < rite_elbow_threshold_minimum_fore + 60:
+            rite_overlay_opacity_fore = max((rite_forearm_angle_fore - rite_elbow_threshold_minimum_fore)/5.0, 1.0)
+        else:
+            rite_overlay_opacity_fore = 10000
+    return rite_overlay_opacity_fore
+
+def get_rite_overlay_transparency_back():
+    if pose_queryer.measure.rite_hand_active_back:
+        rite_overlay_opacity_back = 1.2
+    else:
+        rite_elbow_threshold_minimum_back = pose_queryer._ELBOW_ANGLE_RITE_SIGNAL_BACK - pose_queryer._ACTIVE_ELBOW_ANGLE_ERROR 
+        rite_backarm_angle_back = round(pose_queryer.measure._rite_fore_arm_angle_rel_to_upper_arm)
+        if rite_backarm_angle_back > rite_elbow_threshold_minimum_back - 60:
+            rite_overlay_opacity_back = max((rite_elbow_threshold_minimum_back - rite_backarm_angle_back)/5.0, 1.0)
+        else:
+            rite_overlay_opacity_back = 10000
+    return rite_overlay_opacity_back
 
 def draw_visual_cues_v2(pose_points: list, img: any, width: int, height: int, pose_action) -> any:
+    
     left_elbow_point = pose_points[BodyPoint.elbow_left.value]
     rite_elbow_point = pose_points[BodyPoint.elbow_rite.value]
 
@@ -165,33 +243,47 @@ def draw_visual_cues_v2(pose_points: list, img: any, width: int, height: int, po
     left_upper_arm_angle = pose_queryer.get_angle(left_elbow_plane_point, left_elbow_point, left_shoulder_point)
     rite_upper_arm_angle = pose_queryer.get_angle(rite_elbow_plane_point, rite_elbow_point, rite_shoulder_point)
 
-    # left_elbow_angle = get_angle_elbow_left(pose_points)
-    # rite_elbow_angle = get_angle_elbow_rite(pose_points)
+    left_hand_active_char = '1' if pose_queryer.measure.left_hand_active else '0'
+    rite_hand_active_fore_char = '1' if pose_queryer.measure.rite_hand_active_fore else '0'
+    rite_hand_active_back_char = '1' if pose_queryer.measure.rite_hand_active_back else '0'
+    head_turned_char = '1' if (pose_queryer.measure.head_turned_left or pose_queryer.measure.head_turned_rite) else '0'
+
+    activate_overlay_image = _activate_overlay_map[pose_queryer.measure.left_hand_active]
+    accelerate_overlay_image = _accelerate_overlay_map[left_hand_active_char + rite_hand_active_fore_char]
+    reverse_overlay_image = _reverse_overlay_map[left_hand_active_char + rite_hand_active_back_char]
+    rotator_overlay_image = _rotator_overlay_map[left_hand_active_char + head_turned_char]
+
 
     left_elbow_absolute_angle = -1 * ((left_upper_arm_angle + pose_queryer._ELBOW_ANGLE_LEFT_ACTIVE) % 360)
     rite_elbow_absolute_angle_fore = -1 * ((rite_upper_arm_angle + pose_queryer._ELBOW_ANGLE_RITE_ACTIVE_FORE) % 360)
     rite_elbow_absolute_angle_back = -1 * ((rite_upper_arm_angle + pose_queryer._ELBOW_ANGLE_RITE_ACTIVE_BACK) % 360)
 
-    if pose_queryer.measure._rite_fore_arm_angle > 90 and pose_queryer.measure._rite_fore_arm_angle < 270:
-        rite_elbow_absolute_angle = rite_elbow_absolute_angle_fore
-    else:
-        rite_elbow_absolute_angle = rite_elbow_absolute_angle_back
+    left_overlay_opacity = get_left_overlay_transparency()
+    rite_overlay_opacity_fore = get_rite_overlay_transparency_fore()
+    rite_overlay_opacity_back = get_rite_overlay_transparency_back()
 
-        
-    
-    # motion_image = signal_image_map[pose_queryer.get_action_for_pose_v2(pose_points=pose_points)]
+    if pose_queryer.measure._rite_fore_arm_angle > 90 and pose_queryer.measure._rite_fore_arm_angle < (270):
+        rite_elbow_absolute_angle = rite_elbow_absolute_angle_fore
+        right_hand_overlay = accelerate_overlay_image
+        rite_overlay_opacity = rite_overlay_opacity_fore
+    else: #if pose_queryer.measure._rite_fore_arm_angle < 90 or pose_queryer.measure._rite_fore_arm_angle > (270 + 15):
+        rite_elbow_absolute_angle = rite_elbow_absolute_angle_back
+        right_hand_overlay = reverse_overlay_image
+        rite_overlay_opacity = rite_overlay_opacity_back
+
+
     motion_image = signal_image_map[pose_action]
-    rotator_image = rotator_image_map[pose_action]
+    # rotator_image = rotator_image_map[pose_action]
     head_rotation_angle = (
         10 * 6.5 * -1 * 2 * 
         (pose_queryer.measure._left_ear_distance_from_nose - pose_queryer.measure._rite_ear_distance_from_nose) / 
         max(pose_queryer.measure._left_ear_distance_from_nose, pose_queryer.measure._rite_ear_distance_from_nose)
     )
 
-    img = place_image(img, _FOREARM_OVERLAY_WHITE, left_elbow_point, left_elbow_absolute_angle, 1, 1)
-    img = place_image(img, _FOREARM_OVERLAY_WHITE, rite_elbow_point, rite_elbow_absolute_angle, 1, 1)
-    img = place_image(img, motion_image, (int(width/2), int(height/2)))
-    img = place_image(img, rotator_image, (int(width/2), int(height/2)), head_rotation_angle)
+    img = place_image(img, activate_overlay_image, left_elbow_point, left_elbow_absolute_angle, 0.2, left_overlay_opacity)
+    img = place_image(img, right_hand_overlay, rite_elbow_point, rite_elbow_absolute_angle, 0.2, rite_overlay_opacity)
+    img = place_image(img, motion_image, (int(width/2), int(height/2)), 0, 1, 1.2)
+    img = place_image(img, rotator_overlay_image, (int(width/2), int(height/2)), head_rotation_angle)
 
     img = redimension(img, width, height)
     top = round((height * 2) * 0.8)
