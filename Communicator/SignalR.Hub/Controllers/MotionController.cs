@@ -28,7 +28,7 @@ namespace SignalR.Hub.Controllers
             char moveCharacter = moveToCharMap[pose];
             if (pose != Move.Not)
             {
-                Kyoo.Messages.Enqueue(moveCharacter.ToString());
+                //Kyoo.Messages.Enqueue(moveCharacter.ToString());
             }
 
             return moveCharacter;

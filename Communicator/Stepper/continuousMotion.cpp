@@ -11,9 +11,9 @@ const int BACKWARD_RIGHT = 3 + BASE;
 const int LOOK_LEFT = 4 + BASE;
 const int LOOK_RIGHT = 6 + BASE;
 //const long DEFAULT_STEPS = 800;
-const long DEFAULT_SPEED = 200;
-long currentSpeed_Left = 0;
-long currentSpeedRight = 0;
+const long DEFAULT_SPEED    = 200;
+long currentSpeed_Left      = 0;
+long currentSpeedRight      = 0;
 bool newData = false;
 
 AccelStepper stepper_Left_(1, 3, 2);
