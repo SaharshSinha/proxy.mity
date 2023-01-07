@@ -39,6 +39,18 @@ _HEAD_TURN_INDICATOR_LENGTH = 50
 
 _frame_count = 0
 
+class point_stabilizer:
+    stabilization_length = 12
+    points: list
+    sum_total: int
+    def get_point(self, point):
+        self.sum_total += point
+        self.points.append(point)
+        if len(self.points) > self.stabilization_length:
+            subtractor = self.points.pop()
+            self.sum_total -= subtractor
+        return round(self.sum_total /  len(self.points))
+
 class measures:
     _left_uppr_arm_angle = 0
     _left_fore_arm_angle = 0
@@ -48,12 +60,20 @@ class measures:
     _rite_fore_arm_angle_rel_to_upper_arm = 0
     _left_ear_distance_from_nose = 0
     _rite_ear_distance_from_nose = 0
+    _distance_between_nose_and_ear_midpoint = 0
+    _ear_midpoint = 0
+    _distance_between_ears = 0 
+    nose_from_ear_mid_percent = 0
+    angle_between_nose_and_ear_mid = 0 
+
     fps = ''
     left_hand_active = False
     rite_hand_active_fore = False
     rite_hand_active_back = False
     head_turned_left = False
     head_turned_rite = False
+    head_turned_above = False
+    head_turned_false = False
 
 measure = measures()
 
@@ -70,10 +90,12 @@ def get_action_for_pose_v2(pose_points) -> int:
     set_angles_and_distances(pose_points)
     
     measure.left_hand_active = left_hand_is_active(pose_points)
-    measure.rite_hand_active_fore = rite_hand_is_active_fore(pose_points)
-    measure.rite_hand_active_back = rite_hand_is_active_back(pose_points)
+    # measure.rite_hand_active_fore = rite_hand_is_active_fore(pose_points)
+    # measure.rite_hand_active_back = rite_hand_is_active_back(pose_points)
     measure.head_turned_left = head_is_turned_left(pose_points)
     measure.head_turned_rite = head_is_turned_rite(pose_points)
+    measure.head_turned_above = head_is_turned_above(pose_points)
+    measure.head_turned_below = head_is_turned_below(pose_points)
 
     # print('left_hand_active: ' + str(left_hand_active))
     # print('rite_hand_active_fore: ' + str(rite_hand_active_fore))
@@ -110,11 +132,11 @@ def head_is_turned_left(pose_points) -> bool:
 
     :rtype: bool
     """
-    left_ear_distance: float = measure._left_ear_distance_from_nose
-    rite_ear_distance: float = measure._rite_ear_distance_from_nose
-    rite_ear_min_distance = rite_ear_distance * (_HEAD_TURN_THRESHOLD - _HEAD_TURN_THRESHOLD_BUFFER)
-    rite_ear_max_distance = rite_ear_distance * (_HEAD_TURN_THRESHOLD + (_HEAD_TURN_THRESHOLD_BUFFER * 3))
-    return (rite_ear_min_distance <= left_ear_distance and left_ear_distance <= rite_ear_max_distance)
+    rite_ear_min_distance = measure._rite_ear_distance_from_nose * (_HEAD_TURN_THRESHOLD - _HEAD_TURN_THRESHOLD_BUFFER)
+    rite_ear_max_distance = measure._rite_ear_distance_from_nose * (_HEAD_TURN_THRESHOLD + (_HEAD_TURN_THRESHOLD_BUFFER * 3))
+    return (
+        rite_ear_min_distance <= measure._left_ear_distance_from_nose and 
+        measure._left_ear_distance_from_nose <= rite_ear_max_distance)
 
 
 def head_is_turned_rite(pose_points) -> bool:
@@ -122,11 +144,41 @@ def head_is_turned_rite(pose_points) -> bool:
 
     :rtype: bool
     """
-    left_ear_distance: float = measure._left_ear_distance_from_nose
-    rite_ear_distance: float = measure._rite_ear_distance_from_nose
-    left_ear_min_distance = left_ear_distance * (_HEAD_TURN_THRESHOLD - _HEAD_TURN_THRESHOLD_BUFFER)
-    left_ear_max_distance = left_ear_distance * (_HEAD_TURN_THRESHOLD + (_HEAD_TURN_THRESHOLD_BUFFER*3))
-    return (left_ear_min_distance <= rite_ear_distance and rite_ear_distance <= left_ear_max_distance)
+    left_ear_min_distance = measure._left_ear_distance_from_nose * (_HEAD_TURN_THRESHOLD - _HEAD_TURN_THRESHOLD_BUFFER)
+    left_ear_max_distance = measure._left_ear_distance_from_nose * (_HEAD_TURN_THRESHOLD + (_HEAD_TURN_THRESHOLD_BUFFER*3))
+    return (
+        left_ear_min_distance <= measure._rite_ear_distance_from_nose and 
+        measure._rite_ear_distance_from_nose <= left_ear_max_distance)
+
+def head_is_turned_vertically(pose_points):
+    
+    if measure._distance_between_nose_and_ear_midpoint > (measure._distance_between_ears / 2):
+        if measure._ear_midpoint[_Y_] < pose_points[BodyPoint.nose.value][_Y_]:
+            return 1
+        else:
+            return -1
+    else:
+        return 0
+
+def head_is_turned_above(pose_points) -> bool:
+    """
+
+    :rtype: bool
+    """
+    if head_is_turned_vertically(pose_points) == 1:
+        return True
+    else:
+        return False
+
+def head_is_turned_below(pose_points) -> bool:
+    """
+
+    :rtype: bool
+    """
+    if head_is_turned_vertically(pose_points) == -1:
+        return True
+    else:
+        return False
 
 
 def left_hand_is_active(pose_points) -> bool:
@@ -215,7 +267,7 @@ def get_angle_elbow_rite(pose_points) -> float:
 
 def get_distance_between_points_normalized(pose_points, a: BodyPoint, bx: BodyPoint, by1: BodyPoint, by2: BodyPoint) -> float:
     """
-
+    no one what this method does. That's why commenting should not be procastinated
     :rtype: float
     """
     body_point_a = pose_points[a.value]
@@ -238,6 +290,15 @@ def set_angles_and_distances(pose_points):
     measure._left_ear_distance_from_nose = get_distance_ear_left_from_nose(pose_points)
     measure._rite_ear_distance_from_nose = get_distance_ear_rite_from_nose(pose_points)
 
+    measure._ear_midpoint = get_mid_point(pose_points, BodyPoint.ear_left, BodyPoint.ear_rite)
+    measure._distance_between_ears = get_distance_between_body_points(pose_points, BodyPoint.ear_left, BodyPoint.ear_rite)
+    measure._distance_between_nose_and_ear_midpoint = get_distance(measure._ear_midpoint, pose_points[BodyPoint.nose.value])
+    measure.nose_from_ear_mid_percent = measure._distance_between_nose_and_ear_midpoint / measure._distance_between_ears * 100
+    measure.angle_between_nose_and_ear_mid = get_angle(
+        (0, measure._ear_midpoint[_Y_]),
+        measure._ear_midpoint,
+        pose_points[BodyPoint.nose.value]
+    )
 
 def get_angle_between_points(pose_points, a: BodyPoint, b: BodyPoint, c: BodyPoint) -> float:
     """
@@ -249,6 +310,13 @@ def get_angle_between_points(pose_points, a: BodyPoint, b: BodyPoint, c: BodyPoi
     body_point_c = pose_points[c.value]
     return get_angle(body_point_a, body_point_b, body_point_c)
 
+def get_distance_between_body_points(pose_points, p1: BodyPoint, p2: BodyPoint):
+    return get_distance(pose_points[p1.value], pose_points[p2.value])
+
+def get_mid_point(pose_points, p1: BodyPoint, p2: BodyPoint):
+    return (
+        round((pose_points[p1.value][_X_] + pose_points[p2.value][_X_])/2),
+        round((pose_points[p1.value][_Y_] + pose_points[p2.value][_Y_])/2))
 
 def get_distance(a, b) -> float:
     """

@@ -10,7 +10,9 @@ import requests
 import matplotlib.pyplot as plt
 from PIL import Image
 import time
+from datetime import datetime
 
+video_source = 0
 
 
 # Download the model from TF Hub.
@@ -20,9 +22,8 @@ movenet = model.signatures['serving_default']
 relay_host = '***REMOVED***'
 
 os.system('cls')
- 
+frame_number = 0
 threshold = .3
-video_source = 2
 cap = cv2.VideoCapture(video_source)
 overlayed = cv2.cvtColor(cv2.imread('images/arrow.png'), cv2.COLOR_RGB2RGBA)
 # Checks errors while opening the Video Capture
@@ -47,6 +48,11 @@ alpha = 0.7
 beta = (1.0 - alpha)
 prev_frame_time = 0
 new_frame_time = 0
+dir_name = 'c:\\temp\\' + datetime.now().strftime("%H_%M_%S")
+os.mkdir(dir_name)
+print(dir_name)
+all_frames = []
+frame_write_batch_size = -1
 
 while success:
     new_frame_time = time.time()
@@ -81,7 +87,7 @@ while success:
             xc = int(k[1] * x)
             
             pose_points.append([xc, yc])
-            # img = pose_queryer.show_points_v2(img, frame_idx, point_idx, xc, yc)
+            img = visual_helper.show_points_v2(img, frame_idx, point_idx, xc, yc)
             
     # request_parameter = request_parameter + ']'
     move_char = 'X'
@@ -93,15 +99,25 @@ while success:
     else:
         move_char = '5'
     # if move_char != prev_move_char:
-    # ---http_resp = requests.get('http://'+relay_host+'/api/Conveyer/' + move_char)
+    # http_resp = requests.get('http://'+relay_host+'/api/Conveyer/' + move_char)
         # if (http_resp.ok):
         #     prev_move_char = move_char
     
-    img = cv2.putText(img, str(move_char), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 0), 8, cv2.LINE_AA)
+    # img = cv2.putText(img, str(move_char), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 0), 8, cv2.LINE_AA)
     img = cv2.resize(img, (2*x, 2*y))
     
     cv2.imshow('proxyMotion', img)
     
+    if frame_write_batch_size > 0:
+        all_frames.append(img)
+        if len(all_frames) >= 2000:
+            print('offloading images')
+            while (len(all_frames) > 0):
+                frame_number += 1
+                frame = all_frames.pop()
+                cv2.imwrite(dir_name + '\\' + str(f'{frame_number:05}') + '.png', frame)
+                print('saved frame ' + str(frame_number))    
+
     if cv2.waitKey(1) == ord("q"):
         break
 

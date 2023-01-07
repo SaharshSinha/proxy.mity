@@ -12,44 +12,47 @@ _FOREARM_OVERLAY_WHITE_ACTIVATE = cv2.imread('images/activate.40.png', -1)
 _FOREARM_OVERLAY_WHITE_ACTIVATE_READY = cv2.imread('images/activate-ready.40.png', -1)
 _FOREARM_OVERLAY_WHITE_ACTIVATE_ACTIVE = cv2.imread('images/activate-active.40.png', -1)
 
-_FOREARM_OVERLAY_WHITE_ACCELERATE = cv2.imread('images/accelerate.40.png', -1)
-_FOREARM_OVERLAY_WHITE_ACCELERATE_READY = cv2.imread('images/accelerate-ready.40.png', -1)
-_FOREARM_OVERLAY_WHITE_ACCELERATE_ACTIVE = cv2.imread('images/accelerate-active.40.png', -1)
+# _FOREARM_OVERLAY_WHITE_ACCELERATE = cv2.imread('images/accelerate.40.png', -1)
+# _FOREARM_OVERLAY_WHITE_ACCELERATE_READY = cv2.imread('images/accelerate-ready.40.png', -1)
+# _FOREARM_OVERLAY_WHITE_ACCELERATE_ACTIVE = cv2.imread('images/accelerate-active.40.png', -1)
 
-_FOREARM_OVERLAY_WHITE_REVERSE = cv2.imread('images/reverse.40.png', -1)
-_FOREARM_OVERLAY_WHITE_REVERSE_READY = cv2.imread('images/reverse-ready.40.png', -1)
-_FOREARM_OVERLAY_WHITE_REVERSE_ACTIVE = cv2.imread('images/reverse-active.40.png', -1)
+# _FOREARM_OVERLAY_WHITE_REVERSE = cv2.imread('images/reverse.40.png', -1)
+# _FOREARM_OVERLAY_WHITE_REVERSE_READY = cv2.imread('images/reverse-ready.40.png', -1)
+# _FOREARM_OVERLAY_WHITE_REVERSE_ACTIVE = cv2.imread('images/reverse-active.40.png', -1)
 
-_ROTATOR = cv2.imread('images/rotator-radial.10.png', -1)
-_ROTATOR_READY = cv2.imread('images/rotator-radial-ready.10.png', -1)
-_ROTATOR_ACTIVE = cv2.imread('images/rotator-radial-active.10.png', -1)
+# _ROTATOR = cv2.imread('images/rotator-radial.14.png', -1)
+# _ROTATOR_READY = cv2.imread('images/rotator-radial-ready.14.png', -1)
+# _ROTATOR_ACTIVE = cv2.imread('images/rotator-radial-active.14.png', -1)
 
+# _ROTATOR = cv2.imread('images/pointers/pointer_1.png', -1)
+# _ROTATOR_READY = cv2.imread('images/pointers/pointer_1.png', -1)
+# _ROTATOR_ACTIVE = cv2.imread('images/pointers/pointer_1.png', -1)
 
 _activate_overlay_map = {
     False: _FOREARM_OVERLAY_WHITE_ACTIVATE,
     True: _FOREARM_OVERLAY_WHITE_ACTIVATE_ACTIVE,
 }
 
-_accelerate_overlay_map = {
-    '00': _FOREARM_OVERLAY_WHITE_ACCELERATE,
-    '01': _FOREARM_OVERLAY_WHITE_ACCELERATE_READY,
-    '10': _FOREARM_OVERLAY_WHITE_ACCELERATE,
-    '11': _FOREARM_OVERLAY_WHITE_ACCELERATE_ACTIVE,
-}
+# _accelerate_overlay_map = {
+#     '00': _FOREARM_OVERLAY_WHITE_ACCELERATE,
+#     '01': _FOREARM_OVERLAY_WHITE_ACCELERATE_READY,
+#     '10': _FOREARM_OVERLAY_WHITE_ACCELERATE,
+#     '11': _FOREARM_OVERLAY_WHITE_ACCELERATE_ACTIVE,
+# }
 
-_reverse_overlay_map = {
-    '00': _FOREARM_OVERLAY_WHITE_REVERSE,
-    '01': _FOREARM_OVERLAY_WHITE_REVERSE_READY,
-    '10': _FOREARM_OVERLAY_WHITE_REVERSE,
-    '11': _FOREARM_OVERLAY_WHITE_REVERSE_ACTIVE,
-}
+# _reverse_overlay_map = {
+#     '00': _FOREARM_OVERLAY_WHITE_REVERSE,
+#     '01': _FOREARM_OVERLAY_WHITE_REVERSE_READY,
+#     '10': _FOREARM_OVERLAY_WHITE_REVERSE,
+#     '11': _FOREARM_OVERLAY_WHITE_REVERSE_ACTIVE,
+# }
 
-_rotator_overlay_map = {
-    '00': _ROTATOR,
-    '01': _ROTATOR_READY,
-    '10': _ROTATOR,
-    '11': _ROTATOR_ACTIVE,
-}
+# _rotator_overlay_map = {
+#     '00': _ROTATOR,
+#     '01': _ROTATOR_READY,
+#     '10': _ROTATOR,
+#     '11': _ROTATOR_ACTIVE,
+# }
 
 
 _POINT_OVERLAY_WHITE_LEFT = cv2.imread('images/point.png', -1)
@@ -72,6 +75,23 @@ _INFONT_COLOR = 1
 _INFONT_X = 1
 _INFONT_Y = 1
 
+pointer_images = [
+    cv2.imread('images/pointers/pointer_1.png', -1),
+    cv2.imread('images/pointers/pointer_2.png', -1),
+    cv2.imread('images/pointers/pointer_3.png', -1),
+    cv2.imread('images/pointers/pointer_4.png', -1),
+    cv2.imread('images/pointers/pointer_5.png', -1),
+    cv2.imread('images/pointers/pointer_6.png', -1),
+    cv2.imread('images/pointers/pointer_7.png', -1),
+    cv2.imread('images/pointers/pointer_8.png', -1),
+    cv2.imread('images/pointers/pointer_9.png', -1),
+    cv2.imread('images/pointers/pointer_10.png', -1),
+    cv2.imread('images/pointers/pointer_11.png', -1),
+    cv2.imread('images/pointers/pointer_12.png', -1),
+    cv2.imread('images/pointers/pointer_13.png', -1),
+    cv2.imread('images/pointers/pointer_14.png', -1)
+]
+
 
 signal_image_map = {
     pose_queryer.___MOVE_FORWARD: _FORWARD,
@@ -86,18 +106,18 @@ signal_image_map = {
     pose_queryer.___ARMED: _NO_GO,
 }
 
-rotator_image_map = {
-    pose_queryer.___MOVE_FORWARD: _ROTATOR,
-    pose_queryer.___MOVE_BAKWARD: _ROTATOR,
-    pose_queryer.___MOVE_FORWARD_LEFT: _ROTATOR_ACTIVE,
-    pose_queryer.___MOVE_FORWARD_RITE: _ROTATOR_ACTIVE,
-    pose_queryer.___MOVE_BAKWARD_LEFT: _ROTATOR_ACTIVE,
-    pose_queryer.___MOVE_BAKWARD_RITE: _ROTATOR_ACTIVE,
-    pose_queryer.___LOOK_LEFT: _ROTATOR_ACTIVE,
-    pose_queryer.___LOOK_RITE: _ROTATOR_ACTIVE,
-    pose_queryer.___STOP: _ROTATOR,
-    pose_queryer.___ARMED: _ROTATOR,
-}
+# rotator_image_map = {
+#     pose_queryer.___MOVE_FORWARD: _ROTATOR,
+#     pose_queryer.___MOVE_BAKWARD: _ROTATOR,
+#     pose_queryer.___MOVE_FORWARD_LEFT: _ROTATOR_ACTIVE,
+#     pose_queryer.___MOVE_FORWARD_RITE: _ROTATOR_ACTIVE,
+#     pose_queryer.___MOVE_BAKWARD_LEFT: _ROTATOR_ACTIVE,
+#     pose_queryer.___MOVE_BAKWARD_RITE: _ROTATOR_ACTIVE,
+#     pose_queryer.___LOOK_LEFT: _ROTATOR_ACTIVE,
+#     pose_queryer.___LOOK_RITE: _ROTATOR_ACTIVE,
+#     pose_queryer.___STOP: _ROTATOR,
+#     pose_queryer.___ARMED: _ROTATOR,
+# }
 
 
 tracking_points = set([
@@ -138,7 +158,7 @@ def show_points(img, idx: int, xc: int, yc: int):
     return img
 
 def show_points_v2(img, frame_idx: int, point_idx: int, xc: int, yc: int):
-    if point_idx == frame_idx % 4:
+    if point_idx == frame_idx % 13:
         return place_image(img, _POINT_OVERLAY_WHITE_LEFT, (xc, yc), 0, 1, 1)
     return img
 
@@ -230,73 +250,36 @@ def get_rite_overlay_transparency_back():
     return rite_overlay_opacity_back
 
 def draw_visual_cues_v2(pose_points: list, img: any, width: int, height: int, pose_action) -> any:
-    
+    center = (int(width/2), int(height/2))
     left_elbow_point = pose_points[BodyPoint.elbow_left.value]
-    rite_elbow_point = pose_points[BodyPoint.elbow_rite.value]
 
     left_shoulder_point = pose_points[BodyPoint.shoulder_left.value]
-    rite_shoulder_point = pose_points[BodyPoint.shoulder_rite.value]
 
     left_elbow_plane_point = (0, left_elbow_point[_Y_])
-    rite_elbow_plane_point = (0, rite_elbow_point[_Y_])
     
     left_upper_arm_angle = pose_queryer.get_angle(left_elbow_plane_point, left_elbow_point, left_shoulder_point)
-    rite_upper_arm_angle = pose_queryer.get_angle(rite_elbow_plane_point, rite_elbow_point, rite_shoulder_point)
-
-    left_hand_active_char = '1' if pose_queryer.measure.left_hand_active else '0'
-    rite_hand_active_fore_char = '1' if pose_queryer.measure.rite_hand_active_fore else '0'
-    rite_hand_active_back_char = '1' if pose_queryer.measure.rite_hand_active_back else '0'
-    head_turned_char = '1' if (pose_queryer.measure.head_turned_left or pose_queryer.measure.head_turned_rite) else '0'
-
     activate_overlay_image = _activate_overlay_map[pose_queryer.measure.left_hand_active]
-    accelerate_overlay_image = _accelerate_overlay_map[left_hand_active_char + rite_hand_active_fore_char]
-    reverse_overlay_image = _reverse_overlay_map[left_hand_active_char + rite_hand_active_back_char]
-    rotator_overlay_image = _rotator_overlay_map[left_hand_active_char + head_turned_char]
-
 
     left_elbow_absolute_angle = -1 * ((left_upper_arm_angle + pose_queryer._ELBOW_ANGLE_LEFT_ACTIVE) % 360)
-    rite_elbow_absolute_angle_fore = -1 * ((rite_upper_arm_angle + pose_queryer._ELBOW_ANGLE_RITE_ACTIVE_FORE) % 360)
-    rite_elbow_absolute_angle_back = -1 * ((rite_upper_arm_angle + pose_queryer._ELBOW_ANGLE_RITE_ACTIVE_BACK) % 360)
-
     left_overlay_opacity = get_left_overlay_transparency()
-    rite_overlay_opacity_fore = get_rite_overlay_transparency_fore()
-    rite_overlay_opacity_back = get_rite_overlay_transparency_back()
-
-    if pose_queryer.measure._rite_fore_arm_angle > 90 and pose_queryer.measure._rite_fore_arm_angle < (270):
-        rite_elbow_absolute_angle = rite_elbow_absolute_angle_fore
-        right_hand_overlay = accelerate_overlay_image
-        rite_overlay_opacity = rite_overlay_opacity_fore
-    else: #if pose_queryer.measure._rite_fore_arm_angle < 90 or pose_queryer.measure._rite_fore_arm_angle > (270 + 15):
-        rite_elbow_absolute_angle = rite_elbow_absolute_angle_back
-        right_hand_overlay = reverse_overlay_image
-        rite_overlay_opacity = rite_overlay_opacity_back
-
 
     motion_image = signal_image_map[pose_action]
-    # rotator_image = rotator_image_map[pose_action]
-    head_rotation_angle = (
-        10 * 6.5 * -1 * 2 * 
-        (pose_queryer.measure._left_ear_distance_from_nose - pose_queryer.measure._rite_ear_distance_from_nose) / 
-        max(pose_queryer.measure._left_ear_distance_from_nose, pose_queryer.measure._rite_ear_distance_from_nose)
-    )
-
+    head_rotator_image_index = round(min(13, pose_queryer.measure.nose_from_ear_mid_percent))
+    head_rotator_image = pointer_images[head_rotator_image_index]
     img = place_image(img, activate_overlay_image, left_elbow_point, left_elbow_absolute_angle, 0.2, left_overlay_opacity)
-    img = place_image(img, right_hand_overlay, rite_elbow_point, rite_elbow_absolute_angle, 0.2, rite_overlay_opacity)
-    img = place_image(img, motion_image, (int(width/2), int(height/2)), 0, 1, 1.2)
-    img = place_image(img, rotator_overlay_image, (int(width/2), int(height/2)), head_rotation_angle)
+    img = place_image(img, motion_image, center, 0, 1, 1.2)
+    img = place_image(img, head_rotator_image, center, 360 - round(pose_queryer.measure.angle_between_nose_and_ear_mid), 1, 1.2)
 
     img = redimension(img, width, height)
     top = round((height * 2) * 0.8)
-    img = write_text(-2, top, img, 'head_rotation_angle: ' + str(round(head_rotation_angle)))
+    img = write_text(-6, top, img, 'nose to ear mid: ' + str(round(pose_queryer.measure._distance_between_nose_and_ear_midpoint)))
+    img = write_text(-5, top, img, 'between ears: ' + str(round(pose_queryer.measure._distance_between_ears)))
+    img = write_text(-4, top, img, '%: ' + str(round(pose_queryer.measure.nose_from_ear_mid_percent)))
+    img = write_text(-3, top, img, 'head angle: ' + str(round(pose_queryer.measure.angle_between_nose_and_ear_mid)))
     img = write_text(-1, top, img, 'fps: ' + pose_queryer.measure.fps)
     img = write_text(0, top, img, 'left upprArm: ' + str(round(pose_queryer.measure._left_uppr_arm_angle)))
     img = write_text(1, top, img, 'left foreArm: ' + str(round(pose_queryer.measure._left_fore_arm_angle)))
     img = write_text(2, top, img, 'left foreArm rel: ' + str(round(pose_queryer.measure._left_fore_arm_angle_rel_to_upper_arm)))
-    img = write_text(3, top, img, 'rite upprArm: ' + str(round(pose_queryer.measure._rite_uppr_arm_angle)))
-    img = write_text(4, top, img, 'rite foreArm: ' + str(round(pose_queryer.measure._rite_fore_arm_angle)))
-    img = write_text(5, top, img, 'rite foreArm rel: ' + str(round(pose_queryer.measure._rite_fore_arm_angle_rel_to_upper_arm)))
-    img = write_text(6, top, img, 'left ear to nose: ' + str(round(pose_queryer.measure._left_ear_distance_from_nose)))
-    img = write_text(7, top, img, 'rite ear to nose: ' + str(round(pose_queryer.measure._rite_ear_distance_from_nose)))
 
     return img
 
