@@ -87,15 +87,15 @@ while success:
             xc = int(k[1] * x)
             
             pose_points.append([xc, yc])
-            img = visual_helper.show_points_v2(img, frame_idx, point_idx, xc, yc)
+            # img = visual_helper.show_points_v2(img, frame_idx, point_idx, xc, yc)
             
     # request_parameter = request_parameter + ']'
     move_char = 'X'
     if found_points >= 13:
-        pose_action = pose_queryer.get_action_for_pose_v2(pose_points)
+        pose_action = pose_queryer.get_action_for_pose_v3(pose_points)
         move_char = str(pose_action)
         # print(move_char)
-        img = visual_helper.draw_visual_cues_v2(pose_points, img, x, y, pose_action)
+        img = visual_helper.draw_visual_cues_v3(pose_points, img, x, y, pose_action, frame_idx)
     else:
         move_char = '5'
     # if move_char != prev_move_char:

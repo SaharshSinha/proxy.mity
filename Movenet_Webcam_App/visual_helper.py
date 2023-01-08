@@ -75,6 +75,10 @@ _INFONT_COLOR = 1
 _INFONT_X = 1
 _INFONT_Y = 1
 
+_POINTER_ACTIVE = cv2.imread('images/pointers/pointer_active.png', -1)
+_POINTER_READY = cv2.imread('images/pointers/pointer_ready.png', -1)
+_POINTER_ACTIVATION_INACTIVE = cv2.imread('images/pointers/pointer_activatin_zones.png', -1)
+
 pointer_images = [
     cv2.imread('images/pointers/pointer_1.png', -1),
     cv2.imread('images/pointers/pointer_2.png', -1),
@@ -90,6 +94,32 @@ pointer_images = [
     cv2.imread('images/pointers/pointer_12.png', -1),
     cv2.imread('images/pointers/pointer_13.png', -1),
     cv2.imread('images/pointers/pointer_14.png', -1)
+]
+
+pointer_activated_images = [
+    cv2.imread('images/pointers/pointer_activation_zones_active_0.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_1.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_2.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_3.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_4.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_5.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_6.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_7.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_8.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_9.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_10.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_11.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_12.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_13.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_14.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_15.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_16.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_17.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_18.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_19.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_20.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_21.png', -1),
+    cv2.imread('images/pointers/pointer_activation_zones_active_22.png', -1),
 ]
 
 
@@ -264,17 +294,76 @@ def draw_visual_cues_v2(pose_points: list, img: any, width: int, height: int, po
     left_overlay_opacity = get_left_overlay_transparency()
 
     motion_image = signal_image_map[pose_action]
-    head_rotator_image_index = round(min(13, pose_queryer.measure.nose_from_ear_mid_percent))
+    head_rotator_image_index = round(min(13, pose_queryer.measure.distance_between_nose_and_ear_mid_percent_stabilized.value))
     head_rotator_image = pointer_images[head_rotator_image_index]
+
     img = place_image(img, activate_overlay_image, left_elbow_point, left_elbow_absolute_angle, 0.2, left_overlay_opacity)
     img = place_image(img, motion_image, center, 0, 1, 1.2)
-    img = place_image(img, head_rotator_image, center, 360 - round(pose_queryer.measure.angle_between_nose_and_ear_mid), 1, 1.2)
+    img = place_image(img, head_rotator_image, center, 360 - round(pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.value), 1, 1.2)
 
     img = redimension(img, width, height)
-    top = round((height * 2) * 0.8)
-    img = write_text(-6, top, img, 'nose to ear mid: ' + str(round(pose_queryer.measure._distance_between_nose_and_ear_midpoint)))
-    img = write_text(-5, top, img, 'between ears: ' + str(round(pose_queryer.measure._distance_between_ears)))
-    img = write_text(-4, top, img, '%: ' + str(round(pose_queryer.measure.nose_from_ear_mid_percent)))
+    top = round((height * 2) * 0.4)
+    # print(pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.points, pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.value)
+    img = write_text(-8, top, img, 'nose to ear mid: ' + str(round(pose_queryer.measure._distance_between_nose_and_ear_midpoint)))
+    img = write_text(-7, top, img, '%: ' + str(round(pose_queryer.measure.nose_from_ear_mid_percent)))
+    img = write_text(-6, top, img, 'nose to ear mid stabilized %: ' + str(round(pose_queryer.measure.distance_between_nose_and_ear_mid_percent_stabilized.value)))
+    img = write_text(-5, top, img, ' stabilized angle: ' + str(round(pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.value)))
+    img = write_text(-4, top, img, 'between ears: ' + str(round(pose_queryer.measure._distance_between_ears)))
+    img = write_text(-3, top, img, 'head angle: ' + str(round(pose_queryer.measure.angle_between_nose_and_ear_mid)))
+    img = write_text(-1, top, img, 'fps: ' + pose_queryer.measure.fps)
+    img = write_text(0, top, img, 'left upprArm: ' + str(round(pose_queryer.measure._left_uppr_arm_angle)))
+    img = write_text(1, top, img, 'left foreArm: ' + str(round(pose_queryer.measure._left_fore_arm_angle)))
+    img = write_text(2, top, img, 'left foreArm rel: ' + str(round(pose_queryer.measure._left_fore_arm_angle_rel_to_upper_arm)))
+
+    return img
+
+
+def draw_visual_cues_v3(
+    pose_points: list, 
+    img: any, 
+    width: int, 
+    height: int, 
+    pose_action,
+    frame_number: int) -> any:
+    
+    # img = cv2.line(img, pose_points[BodyPoint.nose.value], pose_queryer.measure._ear_midpoint, (255, 255, 255), 2)
+
+    center = (int(width/2), int(height/2))
+    left_elbow_point = pose_points[BodyPoint.elbow_left.value]
+    left_shoulder_point = pose_points[BodyPoint.shoulder_left.value]
+    left_elbow_plane_point = (0, left_elbow_point[_Y_])
+    
+    left_upper_arm_angle = pose_queryer.get_angle(left_elbow_plane_point, left_elbow_point, left_shoulder_point)
+    activate_overlay_image = _activate_overlay_map[pose_queryer.measure.left_hand_active]
+
+    left_elbow_absolute_angle = -1 * ((left_upper_arm_angle + pose_queryer._ELBOW_ANGLE_LEFT_ACTIVE) % 360)
+    left_overlay_opacity = get_left_overlay_transparency()
+
+    head_rotator_image_index = round(min(13, pose_queryer.measure.distance_between_nose_and_ear_mid_percent_stabilized.value))
+    if pose_queryer.measure.the_signal == pose_queryer.___STOP:
+        motion_image = _POINTER_ACTIVATION_INACTIVE
+        head_rotator_image = pointer_images[head_rotator_image_index]
+    else:
+        motion_image = pointer_activated_images[frame_number % len(pointer_activated_images)]
+        if pose_queryer.measure.left_hand_active:
+            head_rotator_image = _POINTER_ACTIVE
+        else:
+            motion_image = _POINTER_ACTIVATION_INACTIVE
+            head_rotator_image = _POINTER_READY
+    pointer_transparency = 1.4
+    head_rotator_angle = 360 - round(pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.value)
+    img = place_image(img, activate_overlay_image, left_elbow_point, left_elbow_absolute_angle, 0.2, left_overlay_opacity)
+    img = place_image(img, motion_image, center, head_rotator_angle, 1, pointer_transparency)
+    img = place_image(img, head_rotator_image, center, head_rotator_angle, 1, pointer_transparency)
+
+    img = redimension(img, width, height)
+    top = round((height * 2) * 0.4)
+    # print(pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.points, pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.value)
+    img = write_text(-8, top, img, 'nose to ear mid: ' + str(round(pose_queryer.measure._distance_between_nose_and_ear_midpoint)))
+    img = write_text(-7, top, img, '%: ' + str(round(pose_queryer.measure.nose_from_ear_mid_percent)))
+    img = write_text(-6, top, img, 'nose to ear mid stabilized %: ' + str(round(pose_queryer.measure.distance_between_nose_and_ear_mid_percent_stabilized.value)))
+    img = write_text(-5, top, img, ' stabilized angle: ' + str(round(pose_queryer.measure.angle_between_nose_and_ear_mid_stabilized.value)))
+    img = write_text(-4, top, img, 'between ears: ' + str(round(pose_queryer.measure._distance_between_ears)))
     img = write_text(-3, top, img, 'head angle: ' + str(round(pose_queryer.measure.angle_between_nose_and_ear_mid)))
     img = write_text(-1, top, img, 'fps: ' + pose_queryer.measure.fps)
     img = write_text(0, top, img, 'left upprArm: ' + str(round(pose_queryer.measure._left_uppr_arm_angle)))

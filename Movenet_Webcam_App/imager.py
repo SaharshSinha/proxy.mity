@@ -20,7 +20,7 @@ pointer_11 = cv2.imread('images/templates/pointer_11.png', -1)
 pointer_12 = cv2.imread('images/templates/pointer_12.png', -1)
 pointer_13 = cv2.imread('images/templates/pointer_13.png', -1)
 
-pointers = [pointer_02, pointer_03, pointer_04, pointer_05, pointer_06, pointer_07, pointer_08, pointer_09, pointer_10, pointer_11, pointer_12, pointer_13] 
+pointers = [pointer_01, pointer_02, pointer_03, pointer_04, pointer_05, pointer_06, pointer_07, pointer_08, pointer_09, pointer_10, pointer_11, pointer_12, pointer_13] 
 # pointers = []
 # def create_pointers():
 #     for i in range(1, 14):

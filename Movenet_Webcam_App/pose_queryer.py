@@ -36,20 +36,45 @@ _HEAD_TURN_THRESHOLD_BUFFER = 0.1
 _HEAD_TURN_THRESHOLD_PERCENT = 40
 _HEAD_TURN_INDICATOR_LENGTH = 50
 
+stabilizer_len = 6
 
 _frame_count = 0
 
-class point_stabilizer:
-    stabilization_length = 12
-    points: list
-    sum_total: int
-    def get_point(self, point):
+class DistancePointStabilizer:
+    stabilization_length = stabilizer_len
+    points = []
+    sum_total = 0
+    value = 0
+    _delta_threshold = 3
+    _prev_point = 0
+    def add_point(self, point):
         self.sum_total += point
         self.points.append(point)
+        if abs(self._prev_point - point) > self._delta_threshold:
+            self._prev_point = point
+        else:
+            point = self._prev_point
         if len(self.points) > self.stabilization_length:
-            subtractor = self.points.pop()
-            self.sum_total -= subtractor
-        return round(self.sum_total /  len(self.points))
+            self.sum_total -= self.points.pop(0)
+        self.value = round(self.sum_total /  len(self.points))
+
+class AnglePointStabilizer:
+    stabilization_length = stabilizer_len
+    points = []
+    sum_total = 0
+    value = 0
+    _delta_threshold = 3
+    _prev_point = 0
+    def add_point(self, point):
+        self.sum_total += point
+        self.points.append(point)
+        if abs(self._prev_point - point) > self._delta_threshold:
+            self._prev_point = point
+        else:
+            point = self._prev_point
+        if len(self.points) > self.stabilization_length:
+            self.sum_total -= self.points.pop(0)
+        self.value = round(self.sum_total /  len(self.points))
 
 class measures:
     _left_uppr_arm_angle = 0
@@ -65,6 +90,8 @@ class measures:
     _distance_between_ears = 0 
     nose_from_ear_mid_percent = 0
     angle_between_nose_and_ear_mid = 0 
+    distance_between_nose_and_ear_mid_percent_stabilized = DistancePointStabilizer() 
+    angle_between_nose_and_ear_mid_stabilized = AnglePointStabilizer() 
 
     fps = ''
     left_hand_active = False
@@ -74,6 +101,8 @@ class measures:
     head_turned_rite = False
     head_turned_above = False
     head_turned_false = False
+
+    the_signal = 5
 
 measure = measures()
 
@@ -85,6 +114,74 @@ def point_pos(x0, y0, d, theta):
     theta_rad = pi/2 - radians(theta)
     return x0 + d*cos(theta_rad), y0 + d*sin(theta_rad)
 
+_ACCEPTABLE_RANGE_OF_MOTION = 10
+def value_around(value, angle):
+    angle_min = angle - _ACCEPTABLE_RANGE_OF_MOTION
+    angle_max = angle + _ACCEPTABLE_RANGE_OF_MOTION
+    if angle_min < 0:
+        angle_min += _ACCEPTABLE_RANGE_OF_MOTION
+        angle_max += _ACCEPTABLE_RANGE_OF_MOTION
+        value += _ACCEPTABLE_RANGE_OF_MOTION
+    return angle_min <= value and value <= angle_max
+
+def get_action_for_pose_v3(pose_points) -> int:
+    set_angles_and_distances(pose_points)
+    
+    nose_mid_distance = measure.distance_between_nose_and_ear_mid_percent_stabilized.value
+    nose_mid_angle = measure.angle_between_nose_and_ear_mid_stabilized.value
+
+    measure.the_signal = ___STOP
+    if nose_mid_distance >= 13:
+        if value_around(nose_mid_angle, 0):
+            measure.the_signal = ___LOOK_LEFT
+        elif value_around(nose_mid_angle, 45):
+            measure.the_signal = ___MOVE_FORWARD_LEFT
+        elif value_around(nose_mid_angle, 90):
+            measure.the_signal = ___MOVE_FORWARD
+        elif value_around(nose_mid_angle, 135):
+            measure.the_signal = ___MOVE_FORWARD_RITE
+        elif value_around(nose_mid_angle, 180):
+            measure.the_signal = ___LOOK_RITE
+        elif value_around(nose_mid_angle, 225):
+            measure.the_signal = ___MOVE_BAKWARD_RITE
+        elif value_around(nose_mid_angle, 270):
+            measure.the_signal = ___MOVE_BAKWARD
+        elif value_around(nose_mid_angle, 315):
+            measure.the_signal = ___MOVE_BAKWARD_LEFT
+
+    measure.left_hand_active = left_hand_is_active(pose_points)
+    measure.head_turned_left = head_is_turned_left(pose_points)
+    measure.head_turned_rite = head_is_turned_rite(pose_points)
+    measure.head_turned_above = head_is_turned_above(pose_points)
+    measure.head_turned_below = head_is_turned_below(pose_points)
+
+    
+
+    
+    # if   measure.left_hand_active and measure.head_turned_above and measure.head_turned_left:
+    #     measure.the_signal = ___MOVE_FORWARD_LEFT
+    # elif measure.left_hand_active and measure.head_turned_above and measure.head_turned_rite:
+    #     measure.the_signal = ___MOVE_FORWARD_RITE
+    # elif measure.left_hand_active and measure.head_turned_above:
+    #     measure.the_signal = ___MOVE_FORWARD
+
+    # elif measure.left_hand_active and measure.head_turned_below and measure.head_turned_left:
+    #     measure.the_signal = ___MOVE_BAKWARD_LEFT
+    # elif measure.left_hand_active and measure.head_turned_below and measure.head_turned_rite:
+    #     measure.the_signal = ___MOVE_BAKWARD_RITE
+    # elif measure.left_hand_active and measure.head_turned_below:
+    #     measure.the_signal = ___MOVE_BAKWARD
+        
+    # elif measure.left_hand_active and measure.head_turned_left:
+    #     measure.the_signal = ___LOOK_LEFT
+    # elif measure.left_hand_active and measure.head_turned_rite:
+    #     measure.the_signal = ___LOOK_RITE
+    
+    if measure.left_hand_active:
+        return measure.the_signal
+    else:
+        return ___STOP
+        
 
 def get_action_for_pose_v2(pose_points) -> int:
     set_angles_and_distances(pose_points)
@@ -267,7 +364,7 @@ def get_angle_elbow_rite(pose_points) -> float:
 
 def get_distance_between_points_normalized(pose_points, a: BodyPoint, bx: BodyPoint, by1: BodyPoint, by2: BodyPoint) -> float:
     """
-    no one what this method does. That's why commenting should not be procastinated
+    no one knows what this method does. That's why commenting should not be procastinated
     :rtype: float
     """
     body_point_a = pose_points[a.value]
@@ -285,8 +382,8 @@ def get_distance_between_points_normalized(pose_points, a: BodyPoint, bx: BodyPo
 def set_angles_and_distances(pose_points):
     measure._left_uppr_arm_angle = get_angle_absolute(pose_points[BodyPoint.elbow_left.value], pose_points[BodyPoint.shoulder_left.value])
     measure._left_fore_arm_angle = get_angle_absolute(pose_points[BodyPoint.elbow_left.value], pose_points[BodyPoint.   wrist_left.value])
-    measure._rite_uppr_arm_angle = get_angle_absolute(pose_points[BodyPoint.elbow_rite.value], pose_points[BodyPoint.shoulder_rite.value])
-    measure._rite_fore_arm_angle = get_angle_absolute(pose_points[BodyPoint.elbow_rite.value], pose_points[BodyPoint.   wrist_rite.value])
+    # measure._rite_uppr_arm_angle = get_angle_absolute(pose_points[BodyPoint.elbow_rite.value], pose_points[BodyPoint.shoulder_rite.value])
+    # measure._rite_fore_arm_angle = get_angle_absolute(pose_points[BodyPoint.elbow_rite.value], pose_points[BodyPoint.   wrist_rite.value])
     measure._left_ear_distance_from_nose = get_distance_ear_left_from_nose(pose_points)
     measure._rite_ear_distance_from_nose = get_distance_ear_rite_from_nose(pose_points)
 
@@ -299,6 +396,11 @@ def set_angles_and_distances(pose_points):
         measure._ear_midpoint,
         pose_points[BodyPoint.nose.value]
     )
+    measure.distance_between_nose_and_ear_mid_percent_stabilized.add_point(measure.nose_from_ear_mid_percent)
+    angle_to_stabilize = measure.angle_between_nose_and_ear_mid
+    if angle_to_stabilize > 345:
+        angle_to_stabilize -= 360
+    measure.angle_between_nose_and_ear_mid_stabilized.add_point(angle_to_stabilize)
 
 def get_angle_between_points(pose_points, a: BodyPoint, b: BodyPoint, c: BodyPoint) -> float:
     """
