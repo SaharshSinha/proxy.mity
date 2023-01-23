@@ -99,7 +99,7 @@ while success:
     else:
         move_char = '5'
     # if move_char != prev_move_char:
-    # http_resp = requests.get('http://'+relay_host+'/api/Conveyer/' + move_char)
+    http_resp = requests.get('http://'+relay_host+'/api/Conveyer/' + move_char)
         # if (http_resp.ok):
         #     prev_move_char = move_char
     
