@@ -1,6 +1,15 @@
 from math import sin, cos, radians, pi, atan2, degrees, dist
 from body_points import BodyPoint, BodyPointColor, color_array
 import cv2
+import serial
+
+ser = serial.Serial()
+ser.baudrate = 115200
+ser.port = 'COM3'
+ser.open()
+print('serial open - ')
+print(ser.is_open)
+
 
 ___MOVE_FORWARD: int = 8
 ___MOVE_BAKWARD: int = 2
@@ -40,25 +49,141 @@ stabilizer_len = 6
 
 _frame_count = 0
 
-class DistancePointStabilizer:
-    stabilization_length = stabilizer_len
-    points = []
-    sum_total = 0
-    value = 0
-    _delta_threshold = 3
-    _prev_point = 0
-    def add_point(self, point):
-        self.sum_total += point
-        self.points.append(point)
-        if abs(self._prev_point - point) > self._delta_threshold:
-            self._prev_point = point
-        else:
-            point = self._prev_point
-        if len(self.points) > self.stabilization_length:
-            self.sum_total -= self.points.pop(0)
-        self.value = round(self.sum_total /  len(self.points))
 
-class AnglePointStabilizer:
+acceptable_range = 10
+tolerance = 40
+
+_SPEED_RITE_4 = b'1'
+_SPEED_RITE_3 = b'2'
+_SPEED_RITE_2 = b'3'
+_SPEED_RITE_1 = b'4'
+_SPEED_NONE = b'5'
+_SPEED_LEFT_1 = b'6'
+_SPEED_LEFT_2 = b'7'
+_SPEED_LEFT_3 = b'8'
+_SPEED_LEFT_4 = b'9'
+
+_SPEED_DWN_4 = b'A'
+_SPEED_DWN_3 = b'B'
+_SPEED_DWN_2 = b'C'
+_SPEED_DWN_1 = b'D'
+_SPEED_NONE_VERT = b'E'
+_SPEED_TOP_1 = b'F'
+_SPEED_TOP_2 = b'G'
+_SPEED_TOP_3 = b'H'
+_SPEED_TOP_4 = b'I'
+
+def write_text(idx, height, img, text):
+    return cv2.putText(
+        img, 
+        text, 
+        (10, height + (idx * 20)), 
+        cv2.FONT_HERSHEY_SIMPLEX, 
+        0.5, 
+        (255, 255, 255), 
+        1, 
+        cv2.LINE_AA)
+
+def move_it(pose_points, body_point, img, width, height):
+    try:
+        target_point = pose_points[body_point.value]
+        xPos = target_point[_X_]
+        yPos = target_point[_Y_]
+        xMid = round(width / 2)
+        yMid = round(height / 2)
+        min_limit_X = xMid - acceptable_range
+        max_limit_X = xMid + acceptable_range
+        min_limit_Y = yMid - acceptable_range
+        max_limit_Y = yMid + acceptable_range
+        img = cv2.circle(img, target_point, 1, (0, 0, 0), 2)
+        img = cv2.rectangle(
+                img, 
+                (min_limit_X, min_limit_Y), 
+                (max_limit_X, max_limit_Y), 
+                (100, 100, 100),
+                1)
+   
+            
+        if xPos < max_limit_X and xPos > min_limit_X:
+            char_to_write = _SPEED_NONE
+        elif xPos > max_limit_X:
+            delta = xPos - max_limit_X
+
+            if   delta < tolerance * 1:
+                char_to_write = _SPEED_LEFT_1
+            elif delta < tolerance * 2:
+                char_to_write = _SPEED_LEFT_2
+            elif delta < tolerance * 3:
+                char_to_write = _SPEED_LEFT_3
+            else:
+                char_to_write = _SPEED_LEFT_4
+
+        else:
+            delta = min_limit_X - xPos
+
+            if   delta < tolerance * 1:
+                char_to_write = _SPEED_RITE_1
+            elif delta < tolerance * 2:
+                char_to_write = _SPEED_RITE_2
+            elif delta < tolerance * 3:
+                char_to_write = _SPEED_RITE_3
+            else:
+                char_to_write = _SPEED_RITE_4
+                
+        
+        img = write_text(0, 100, img, char_to_write.decode())
+        write_serial(char_to_write)
+
+
+        if yPos < max_limit_Y and yPos > min_limit_Y:
+            char_to_write = _SPEED_NONE_VERT
+        elif yPos > max_limit_Y:
+            delta = yPos - max_limit_Y
+
+            if   delta < tolerance * 1:
+                char_to_write = _SPEED_TOP_1
+            elif delta < tolerance * 2:
+                char_to_write = _SPEED_TOP_2
+            elif delta < tolerance * 3:
+                char_to_write = _SPEED_TOP_3
+            else:
+                char_to_write = _SPEED_TOP_4
+
+        else:
+            delta = min_limit_Y - yPos
+
+            if   delta < tolerance * 1:
+                char_to_write = _SPEED_DWN_1
+            elif delta < tolerance * 2:
+                char_to_write = _SPEED_DWN_2
+            elif delta < tolerance * 3:
+                char_to_write = _SPEED_DWN_3
+            else:
+                char_to_write = _SPEED_DWN_4
+                
+        
+        img = write_text(0, 130, img, char_to_write.decode())
+        write_serial(char_to_write)
+
+    except Exception as e: 
+        diff = 0
+        print(e)
+        write_serial(_SPEED_NONE)
+        write_serial(_SPEED_NONE_VERT)
+    return img
+
+def write_serial(charToWrite):
+    print('->' + charToWrite.decode())
+    # return
+    try:
+        ser.write(charToWrite)
+        # if (prev_char_written != charToWrite):
+        #     print('writing ' + charToWrite)
+        # prev_char_written = charToWrite
+        
+    except Exception as e: print(e)
+
+class DistancePointStabilizer:
     stabilization_length = stabilizer_len
     points = []
     sum_total = 0
@@ -91,7 +216,7 @@ class measures:
     nose_from_ear_mid_percent = 0
     angle_between_nose_and_ear_mid = 0 
     distance_between_nose_and_ear_mid_percent_stabilized = DistancePointStabilizer() 
-    angle_between_nose_and_ear_mid_stabilized = AnglePointStabilizer() 
+    # angle_between_nose_and_ear_mid_stabilized = AnglePointStabilizer() 
 
     fps = ''
     left_hand_active = False
@@ -106,7 +231,7 @@ class measures:
 
 measure = measures()
 
-def relative_point_pos(body_point, d, theta): # -> list[int]:
+def relative_point_pos(body_point, d, theta) -> list[int]:
     theta_rad = pi/2 - radians(theta)
     return [round(body_point[_X_] + d*cos(theta_rad)), round(body_point[_Y_] + d*sin(theta_rad))]
 
